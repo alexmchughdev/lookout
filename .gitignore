@@ -1,0 +1,7 @@
+lookout
+dist/
+reports/
+*.html
+.env
+lookout.yaml
+!examples/*.yaml
