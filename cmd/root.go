@@ -24,7 +24,7 @@ var version = "0.1.0"
 func printHeader() {
 	cyan := color.New(color.FgCyan, color.Bold)
 	dim := color.New(color.Faint)
-	cyan.Println(asciiLogo)
+	cyan.Print(asciiLogo)
 	dim.Printf("  %s  v%s\n\n", tagline, version)
 }
 
@@ -46,6 +46,7 @@ func Execute() {
 func init() {
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(validateCmd)
 	rootCmd.AddCommand(modelsCmd)
 	rootCmd.AddCommand(installBrowsersCmd)
 }
