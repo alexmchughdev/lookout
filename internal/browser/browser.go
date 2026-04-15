@@ -4,6 +4,8 @@ package browser
 import (
 	"context"
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,7 +49,11 @@ func New(headless bool) (*Session, error) {
 	}
 
 	allocCtx, allocCancel := chromedp.NewExecAllocator(context.Background(), opts...)
-	ctx, cancel := chromedp.NewContext(allocCtx)
+	// Suppress noisy CDP protocol parse errors (e.g. cookiePartitionKey) that
+	// chromedp logs when Chrome returns newer event payloads than the client
+	// understands. These are harmless and distract users from real output.
+	quiet := log.New(io.Discard, "", 0)
+	ctx, cancel := chromedp.NewContext(allocCtx, chromedp.WithErrorf(quiet.Printf))
 
 	// Combined cancel: cancels both contexts
 	combinedCancel := func() {
