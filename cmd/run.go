@@ -26,6 +26,7 @@ var (
 	flagProvider string
 	flagAPIKey   string
 	flagOutput   string
+	flagJUnit    string
 	flagRetries  int
 	flagDebug    bool
 	flagHeaded   bool
@@ -65,6 +66,7 @@ func init() {
 	runCmd.Flags().StringVarP(&flagOutput, "output", "o", "reports", "Report output directory")
 	runCmd.Flags().BoolVar(&flagDebug, "debug", false, "Embed all screenshots in report")
 	runCmd.Flags().BoolVar(&flagHeaded, "headed", false, "Run browser in headed mode")
+	runCmd.Flags().StringVar(&flagJUnit, "junit", "", "Write JUnit XML report to this path (for CI)")
 	runCmd.Flags().IntVar(&flagRetries, "retry", 0, "Retry Fail/Blocked tests up to N times")
 	runCmd.Flags().BoolVar(&flagNoReport, "no-report", false, "Skip HTML report generation")
 	runCmd.Flags().BoolVar(&flagNoPreflight, "no-preflight", false, "Skip vision model reachability check")
@@ -284,6 +286,13 @@ func runSuite(args []string) error {
 			yellow.Printf("  ⚠  report error: %v\n", err)
 		} else {
 			faint.Printf("  Report: %s\n", path)
+		}
+	}
+	if flagJUnit != "" {
+		if err := report.WriteJUnit(results, s, duration, flagJUnit); err != nil {
+			yellow.Printf("  ⚠  junit error: %v\n", err)
+		} else {
+			faint.Printf("  JUnit:  %s\n", flagJUnit)
 		}
 	}
 
