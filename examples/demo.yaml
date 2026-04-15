@@ -1,0 +1,58 @@
+# lookout demo spec targeting OrangeHRM's public demo
+# Run: lookout run examples/demo.yaml
+
+app:
+  url: https://opensource-demo.orangehrmlive.com
+  auth:
+    type: email_password
+    email: Admin
+    password: admin123
+    email_field: 'input[name="username"]'
+    password_field: 'input[name="password"]'
+    submit_button: 'button[type="submit"]'
+    success_url_excludes: /auth/login
+
+model:
+  provider: ollama
+  name: gemma3:12b
+
+tests:
+  - id: L-01
+    section: auth
+    url: /web/index.php/auth/login
+    question: Is a login form visible with username and password fields?
+
+  - id: D-01
+    section: dashboard
+    url: /web/index.php/dashboard/index
+    question: Has the dashboard loaded with widgets or a welcome panel visible?
+
+  - id: A-01
+    section: admin
+    url: /web/index.php/admin/viewSystemUsers
+    question: Is a user management table or list visible?
+
+  - id: P-01
+    section: pim
+    url: /web/index.php/pim/viewEmployeeList
+    question: Is an employee list or table visible with search filters?
+
+  - id: L-02
+    section: leave
+    url: /web/index.php/leave/viewLeaveList
+    question: Has the leave list page loaded with filter controls visible?
+
+  - id: T-01
+    section: time
+    url: /web/index.php/time/viewEmployeeTimesheet
+    question: Is a timesheet interface visible?
+
+  - id: R-01
+    section: recruitment
+    url: /web/index.php/recruitment/viewCandidates
+    question: Is a candidates list or recruitment dashboard visible?
+
+  - id: N-01
+    section: nav
+    url: /web/index.php/dashboard/index
+    question: Is a left sidebar navigation visible with menu items?
