@@ -19,15 +19,17 @@ type Result struct {
 	Section    string
 	Verdict    vision.Verdict
 	Duration   time.Duration
+	Attempts   int    // how many attempts were made (>=1)
 	Screenshot []byte // nil unless debug mode or failure
 	PreActErr  string // non-empty if pre-action failed (test still runs)
 }
 
 // Options configures a test run.
 type Options struct {
-	Sections []string          // nil = all sections
-	Headless bool              // true = headless Chrome
-	Debug    bool              // true = embed all screenshots
+	Sections []string         // nil = all sections
+	Headless bool             // true = headless Chrome
+	Debug    bool             // true = embed all screenshots
+	Retries  int              // retry Fail/Blocked verdicts up to N extra times
 	OnResult func(r *Result)  // called after each test completes
 }
 
@@ -68,7 +70,18 @@ func Run(spec *config.Spec, opts Options) ([]*Result, error) {
 	// Run tests
 	var results []*Result
 	for i := range tests {
-		r := runOne(session, &tests[i], spec, opts.Debug)
+		var r *Result
+		attempts := opts.Retries + 1
+		for attempt := 1; attempt <= attempts; attempt++ {
+			r = runOne(session, &tests[i], spec, opts.Debug)
+			r.Attempts = attempt
+			if r.Verdict.Result == "Pass" || r.Verdict.Result == "Skipped" {
+				break
+			}
+			if attempt < attempts {
+				time.Sleep(1 * time.Second)
+			}
+		}
 		results = append(results, r)
 		if opts.OnResult != nil {
 			opts.OnResult(r)

@@ -26,6 +26,7 @@ var (
 	flagProvider string
 	flagAPIKey   string
 	flagOutput   string
+	flagRetries  int
 	flagDebug    bool
 	flagHeaded   bool
 	flagNoReport bool
@@ -64,6 +65,7 @@ func init() {
 	runCmd.Flags().StringVarP(&flagOutput, "output", "o", "reports", "Report output directory")
 	runCmd.Flags().BoolVar(&flagDebug, "debug", false, "Embed all screenshots in report")
 	runCmd.Flags().BoolVar(&flagHeaded, "headed", false, "Run browser in headed mode")
+	runCmd.Flags().IntVar(&flagRetries, "retry", 0, "Retry Fail/Blocked tests up to N times")
 	runCmd.Flags().BoolVar(&flagNoReport, "no-report", false, "Skip HTML report generation")
 	runCmd.Flags().BoolVar(&flagNoPreflight, "no-preflight", false, "Skip vision model reachability check")
 }
@@ -206,6 +208,7 @@ func runSuite(args []string) error {
 		Sections: sections,
 		Headless: !flagHeaded,
 		Debug:    flagDebug,
+		Retries:  flagRetries,
 		OnResult: func(r *runner.Result) {
 			sym := symbols[r.Verdict.Result]
 			note := r.Verdict.Note
