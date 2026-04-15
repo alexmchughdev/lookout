@@ -13,7 +13,14 @@ import (
 // Login logs into the app using the provided auth config.
 // Handles both single-step and two-step (email → Continue → password) flows.
 func Login(s *browser.Session, baseURL string, auth config.AuthConfig) error {
-	loginURL := strings.TrimRight(baseURL, "/") + "/login"
+	path := auth.LoginPath
+	if path == "" {
+		path = "/login"
+	}
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	loginURL := strings.TrimRight(baseURL, "/") + path
 
 	if err := s.Navigate(loginURL); err != nil {
 		return fmt.Errorf("navigating to login page: %w", err)

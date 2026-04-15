@@ -5,6 +5,7 @@ app:
   url: https://opensource-demo.orangehrmlive.com
   auth:
     type: email_password
+    login_path: /web/index.php/auth/login
     email: Admin
     password: admin123
     email_field: 'input[name="username"]'

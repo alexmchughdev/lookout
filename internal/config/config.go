@@ -34,6 +34,7 @@ func (m *ModelConfig) SetDefaults() {
 // AuthConfig holds login flow settings.
 type AuthConfig struct {
 	Type               string `yaml:"type"`                 // email_password
+	LoginPath          string `yaml:"login_path"`           // path to login page, default "/login"
 	EmailField         string `yaml:"email_field"`
 	ContinueButton     string `yaml:"continue_button"`      // optional two-step
 	PasswordField      string `yaml:"password_field"`
@@ -46,6 +47,9 @@ type AuthConfig struct {
 func (a *AuthConfig) SetDefaults() {
 	if a.Type == "" {
 		a.Type = "email_password"
+	}
+	if a.LoginPath == "" {
+		a.LoginPath = "/login"
 	}
 	if a.EmailField == "" {
 		a.EmailField = `input[type="email"]`
