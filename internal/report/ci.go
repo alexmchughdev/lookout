@@ -1,7 +1,8 @@
-// CI-friendly output formats: JUnit XML for CI systems.
+// CI-friendly output formats: JUnit XML (for CI systems) and JSON (for custom pipelines).
 package report
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"os"
@@ -101,3 +102,67 @@ func WriteJUnit(results []*runner.Result, spec *config.Spec, duration time.Durat
 	return os.WriteFile(path, out, 0644)
 }
 
+// WriteJSON writes a machine-readable JSON report.
+func WriteJSON(results []*runner.Result, spec *config.Spec, duration time.Duration, build, path string) error {
+	type jsonResult struct {
+		ID       string `json:"id"`
+		Section  string `json:"section"`
+		Result   string `json:"result"`
+		Note     string `json:"note"`
+		Duration string `json:"duration"`
+		Attempts int    `json:"attempts"`
+		PreActErr string `json:"pre_action_error,omitempty"`
+	}
+	type summary struct {
+		Pass, Fail, Blocked, Skipped, Total int
+	}
+
+	out := struct {
+		Build    string        `json:"build"`
+		URL      string        `json:"url"`
+		Provider string        `json:"provider"`
+		Model    string        `json:"model"`
+		Duration string        `json:"duration"`
+		Summary  summary       `json:"summary"`
+		Results  []jsonResult  `json:"results"`
+	}{
+		Build:    build,
+		URL:      spec.App.URL,
+		Provider: spec.Model.Provider,
+		Model:    spec.Model.Name,
+		Duration: duration.Round(time.Millisecond).String(),
+	}
+
+	for _, r := range results {
+		out.Results = append(out.Results, jsonResult{
+			ID:        r.TestID,
+			Section:   r.Section,
+			Result:    r.Verdict.Result,
+			Note:      r.Verdict.Note,
+			Duration:  r.Duration.Round(time.Millisecond).String(),
+			Attempts:  r.Attempts,
+			PreActErr: r.PreActErr,
+		})
+		out.Summary.Total++
+		switch r.Verdict.Result {
+		case "Pass":
+			out.Summary.Pass++
+		case "Fail":
+			out.Summary.Fail++
+		case "Blocked":
+			out.Summary.Blocked++
+		case "Skipped":
+			out.Summary.Skipped++
+		}
+	}
+
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return fmt.Errorf("creating json dir: %w", err)
+	}
+	data, err := json.MarshalIndent(out, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	return os.WriteFile(path, data, 0644)
+}
