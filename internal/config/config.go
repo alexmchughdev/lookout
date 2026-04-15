@@ -99,6 +99,9 @@ type TestDef struct {
 	Section   string     `yaml:"section"`
 	URL       string     `yaml:"url"` // relative path
 	Question  string     `yaml:"question"`
+	WaitMs    int        `yaml:"wait_ms,omitempty"`   // extra wait after navigation / pre-action
+	WaitFor   string     `yaml:"wait_for,omitempty"`  // CSS selector to wait for before screenshot
+	FullPage  *bool      `yaml:"full_page,omitempty"` // capture full scrollable page (default true)
 	PreAction *PreAction `yaml:"pre_action,omitempty"`
 }
 

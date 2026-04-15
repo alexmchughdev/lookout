@@ -102,9 +102,29 @@ func runOne(s *browser.Session, test *config.TestDef, spec *config.Spec, debug b
 		}
 	}
 
-	// Screenshot
-	start      := time.Now()
-	screenshot, err := s.Screenshot()
+	// Optional wait_for selector (e.g. SPA readiness signal)
+	if test.WaitFor != "" {
+		_ = s.WaitForSelector(test.WaitFor, 15*time.Second)
+	}
+
+	// Optional extra settle time
+	if test.WaitMs > 0 {
+		s.Sleep(time.Duration(test.WaitMs) * time.Millisecond)
+	}
+
+	// Screenshot — default to full-page unless explicitly disabled
+	start := time.Now()
+	fullPage := true
+	if test.FullPage != nil {
+		fullPage = *test.FullPage
+	}
+	var screenshot []byte
+	var err error
+	if fullPage {
+		screenshot, err = s.FullPageScreenshot()
+	} else {
+		screenshot, err = s.Screenshot()
+	}
 	if err != nil {
 		r.Verdict = vision.Verdict{
 			Result: "Blocked",

@@ -101,6 +101,27 @@ func (s *Session) Screenshot() ([]byte, error) {
 	return buf, nil
 }
 
+// FullPageScreenshot captures the entire scrollable page as PNG bytes.
+func (s *Session) FullPageScreenshot() ([]byte, error) {
+	ctx, cancel := context.WithTimeout(s.Ctx, 20*time.Second)
+	defer cancel()
+
+	var buf []byte
+	if err := chromedp.Run(ctx,
+		chromedp.FullScreenshot(&buf, 90),
+	); err != nil {
+		return nil, fmt.Errorf("capturing full-page screenshot: %w", err)
+	}
+	return buf, nil
+}
+
+// WaitForSelector blocks until the selector is visible, or timeout.
+func (s *Session) WaitForSelector(selector string, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(s.Ctx, timeout)
+	defer cancel()
+	return chromedp.Run(ctx, chromedp.WaitVisible(selector, chromedp.ByQuery))
+}
+
 // CurrentURL returns the current page URL.
 func (s *Session) CurrentURL() (string, error) {
 	ctx, cancel := context.WithTimeout(s.Ctx, 5*time.Second)

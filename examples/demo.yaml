@@ -27,6 +27,8 @@ tests:
     section: dashboard
     url: /web/index.php/dashboard/index
     question: Has the dashboard loaded with widgets or a welcome panel visible?
+    wait_for: '.oxd-topbar-header'
+    wait_ms: 1500
 
   - id: A-01
     section: admin
