@@ -41,6 +41,62 @@ var (
 	noteRe   = regexp.MustCompile(`(?i)NOTE:\s*(.+)`)
 )
 
+// Preflight verifies the configured vision model is reachable and usable.
+// Returns a human-readable error with remediation steps if not.
+// Does NOT send a screenshot — for Ollama it confirms the daemon is up and
+// the model is pulled; for hosted APIs it confirms the API key is non-empty.
+func Preflight(model config.ModelConfig) error {
+	switch model.Provider {
+	case "ollama", "":
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, model.Host+"/api/tags", nil)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return fmt.Errorf(
+				"cannot reach Ollama at %s: %v\n"+
+					"  Start it with:  ollama serve\n"+
+					"  Or install:     https://ollama.com/download",
+				model.Host, err,
+			)
+		}
+		defer resp.Body.Close()
+		data, _ := io.ReadAll(resp.Body)
+		var tags struct {
+			Models []struct {
+				Name string `json:"name"`
+			} `json:"models"`
+		}
+		if err := json.Unmarshal(data, &tags); err != nil {
+			return fmt.Errorf("parsing Ollama /api/tags response: %w", err)
+		}
+		for _, m := range tags.Models {
+			if m.Name == model.Name || strings.HasPrefix(m.Name, model.Name+":") {
+				return nil
+			}
+		}
+		return fmt.Errorf(
+			"model %q not found in Ollama\n"+
+				"  Pull it with:   ollama pull %s\n"+
+				"  List available: lookout models",
+			model.Name, model.Name,
+		)
+
+	case "anthropic", "openai":
+		if model.APIKey == "" {
+			return fmt.Errorf(
+				"%s provider requires an API key\n"+
+					"  Set it in your spec as `api_key:` or via LOOKOUT_API_KEY env var",
+				model.Provider,
+			)
+		}
+		return nil
+
+	default:
+		return fmt.Errorf("unknown provider %q (use ollama, anthropic, or openai)", model.Provider)
+	}
+}
+
 // Judge assesses a screenshot against a question using the configured model.
 func Judge(screenshot []byte, question string, model config.ModelConfig) (Verdict, error) {
 	b64 := base64.StdEncoding.EncodeToString(screenshot)

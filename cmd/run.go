@@ -13,6 +13,7 @@ import (
 	"github.com/AlexMcHugh1/lookout/internal/report"
 	"github.com/AlexMcHugh1/lookout/internal/runner"
 	"github.com/AlexMcHugh1/lookout/internal/spec"
+	"github.com/AlexMcHugh1/lookout/internal/vision"
 )
 
 var (
@@ -28,6 +29,7 @@ var (
 	flagDebug    bool
 	flagHeaded   bool
 	flagNoReport bool
+	flagNoPreflight bool
 )
 
 var runCmd = &cobra.Command{
@@ -63,6 +65,7 @@ func init() {
 	runCmd.Flags().BoolVar(&flagDebug, "debug", false, "Embed all screenshots in report")
 	runCmd.Flags().BoolVar(&flagHeaded, "headed", false, "Run browser in headed mode")
 	runCmd.Flags().BoolVar(&flagNoReport, "no-report", false, "Skip HTML report generation")
+	runCmd.Flags().BoolVar(&flagNoPreflight, "no-preflight", false, "Skip vision model reachability check")
 }
 
 func runSuite(args []string) error {
@@ -171,6 +174,13 @@ func runSuite(args []string) error {
 	fmt.Printf("  Tests:    %d\n", len(tests))
 	fmt.Printf("  Build:    %s\n", buildID)
 	fmt.Println()
+
+	// Preflight: fail fast if vision model is unreachable
+	if !flagNoPreflight {
+		if err := vision.Preflight(s.Model); err != nil {
+			return fmt.Errorf("preflight failed: %w", err)
+		}
+	}
 
 	sep := strings.Repeat("─", 52)
 	fmt.Println(sep)
