@@ -4,6 +4,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -128,4 +129,42 @@ func LoadYAML(path string) (*Spec, error) {
 	spec.App.Auth.SetDefaults()
 
 	return &spec, nil
+}
+
+// Validate returns a non-nil error if the spec is missing required fields,
+// has duplicate test IDs, or contains obviously malformed entries.
+// Credentials are NOT checked here (they may come from env vars / CLI flags).
+func (s *Spec) Validate() error {
+	var errs []string
+
+	if strings.TrimSpace(s.App.URL) == "" {
+		errs = append(errs, "app.url is required")
+	}
+
+	if len(s.Tests) == 0 {
+		errs = append(errs, "no tests defined — add at least one entry under `tests:`")
+	}
+
+	seen := make(map[string]int, len(s.Tests))
+	for i, t := range s.Tests {
+		pos := fmt.Sprintf("tests[%d]", i)
+		if strings.TrimSpace(t.ID) == "" {
+			errs = append(errs, pos+": `id` is required")
+		} else if prev, ok := seen[t.ID]; ok {
+			errs = append(errs, fmt.Sprintf("%s: duplicate id %q (also at tests[%d])", pos, t.ID, prev))
+		} else {
+			seen[t.ID] = i
+		}
+		if strings.TrimSpace(t.Question) == "" {
+			errs = append(errs, fmt.Sprintf("%s (id=%s): `question` is required", pos, t.ID))
+		}
+		if strings.TrimSpace(t.URL) == "" {
+			errs = append(errs, fmt.Sprintf("%s (id=%s): `url` is required (use `/` for root)", pos, t.ID))
+		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("spec invalid:\n  - %s", strings.Join(errs, "\n  - "))
+	}
+	return nil
 }

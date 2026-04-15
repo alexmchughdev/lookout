@@ -99,6 +99,9 @@ func runSuite(args []string) error {
 	if err != nil {
 		return fmt.Errorf("loading spec: %w", err)
 	}
+	if err := s.Validate(); err != nil {
+		return err
+	}
 
 	// Apply CLI overrides
 	if flagURL != "" {
