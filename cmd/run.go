@@ -49,6 +49,8 @@ Examples:
   lookout run spec.pdf   --url https://myapp.com --email me@co.com
   lookout run            --sections navigation,notes`,
 
+	SilenceUsage:  true,
+	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		printHeader()
 		return runSuite(args)
@@ -65,11 +67,11 @@ func init() {
 	runCmd.Flags().StringVar(&flagProvider, "provider", "", "Model provider: ollama|anthropic|openai")
 	runCmd.Flags().StringVar(&flagAPIKey, "api-key", "", "API key for anthropic/openai")
 	runCmd.Flags().StringVarP(&flagOutput, "output", "o", "reports", "Report output directory")
-	runCmd.Flags().BoolVar(&flagDebug, "debug", false, "Embed all screenshots in report")
-	runCmd.Flags().BoolVar(&flagHeaded, "headed", false, "Run browser in headed mode")
 	runCmd.Flags().StringVar(&flagJUnit, "junit", "", "Write JUnit XML report to this path (for CI)")
 	runCmd.Flags().StringVar(&flagJSON, "json", "", "Write machine-readable JSON report to this path")
 	runCmd.Flags().IntVar(&flagRetries, "retry", 0, "Retry Fail/Blocked tests up to N times")
+	runCmd.Flags().BoolVar(&flagDebug, "debug", false, "Embed all screenshots in report")
+	runCmd.Flags().BoolVar(&flagHeaded, "headed", false, "Run browser in headed mode")
 	runCmd.Flags().BoolVar(&flagNoReport, "no-report", false, "Skip HTML report generation")
 	runCmd.Flags().BoolVar(&flagNoPreflight, "no-preflight", false, "Skip vision model reachability check")
 }
