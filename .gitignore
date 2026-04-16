@@ -1,7 +1,16 @@
+# Build artifacts
 lookout
 dist/
 reports/
 *.html
+
+# Secrets — never commit these
 .env
-lookout.yaml
-!examples/*.yaml
+.env.*
+.lookout/              # captured login session (contains auth cookies)
+
+# User-authored specs — keep private/company YAML out of the public repo.
+# Only the vendored example spec ships with the project.
+/*.yaml
+/*.yml
+!/examples/*.yaml
