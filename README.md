@@ -1,14 +1,10 @@
-# lookout
+<p align="center">
+  <img src="docs/banner.webp" alt="lookout" width="640">
+</p>
 
-```
-    __                __              __
-   / /   ____  ____  / /______  __  _/ /_
-  / /   / __ \/ __ \/ //_/ __ \/ / / / __/
- / /___/ /_/ / /_/ / ,< / /_/ / /_/ / /_
-/_____/\____/\____/_/|_|\____/\__,_/\__/
-
- visual QA · local-first · single binary
-```
+<p align="center">
+  <em>visual QA · local-first · single binary</em>
+</p>
 
 **lookout** automates E2E visual QA. chromedp navigates your app deterministically. A local vision model looks at each screenshot and returns a Pass/Fail verdict. No agent loops. No cloud required. Single binary.
 
