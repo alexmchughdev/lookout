@@ -25,30 +25,44 @@ var initCmd = &cobra.Command{
 			fmt.Scan(&emailFlag)
 		}
 
-		template := fmt.Sprintf(`# lookout test spec
+		template := fmt.Sprintf(`# lookout test spec — https://github.com/AlexMcHugh1/lookout
 # Run: lookout run
 
 app:
   url: %s
   auth:
     type: email_password
+    # login_path: /login                 # override if your login page isn't at /login
     email: %s
-    password: ""   # or: export LOOKOUT_PASSWORD='...'
-    # Uncomment for two-step login (email → Continue → password):
+    password: ""                         # or: export LOOKOUT_PASSWORD='...'
+    # email_field:     'input[name="email"]'      # defaults: input[type="email"]
+    # password_field:  'input[name="password"]'   # defaults: input[type="password"]
+    # submit_button:   'button[type="submit"]'
+    # success_url_excludes: /login       # login is "done" when URL no longer contains this
+    # Two-step flow (email → Continue → password):
     # continue_button: 'button:has-text("Continue")'
 
-# Model config — defaults to local Ollama (free, no API key needed)
-# model:
-#   provider: ollama
-#   name: gemma3:12b
-#   host: http://localhost:11434
-#
-# To use Claude API instead:
-#   provider: anthropic
-#   name: claude-sonnet-4-5
-#   api_key: sk-ant-...   # or: export LOOKOUT_API_KEY='...'
+# Model — defaults to local Ollama (free, private). Run: ollama pull gemma3:12b
+model:
+  provider: ollama
+  name: gemma3:12b
+  # host: http://localhost:11434
+  #
+  # To use a hosted API instead, comment out the above and uncomment one:
+  # provider: anthropic
+  # name: claude-sonnet-4-5
+  # api_key: sk-ant-...                  # or: export LOOKOUT_API_KEY='...'
+  #
+  # provider: openai
+  # name: gpt-4o
 
 tests:
+  # Each test: navigate → (optional pre_action) → (optional wait) → screenshot → vision model answers question.
+  # Fields: id*, section, url*, question*, wait_for, wait_ms, full_page, pre_action
+  #   wait_for: CSS selector to wait for before screenshot (great for SPA hydration)
+  #   wait_ms:  extra settle time after navigation / pre-action
+  #   full_page: capture full scrollable page (default true)
+
   - id: smoke-01
     section: smoke
     url: /
@@ -59,25 +73,25 @@ tests:
     url: /login
     question: Is a login form visible with email and password fields?
 
-  # Add more tests here. Each test navigates to `+"`url`"+`, optionally runs
-  # a pre_action, then asks `+"`question`"+` about a screenshot.
-  #
-  # Available pre_action types:
-  #   click         — click an element
-  #   type_and_verify — type text, save, reload, verify text persists
-  #   open_first    — click first item in a list (e.g. open a workflow)
-  #   drag          — drag a card (React DnD compatible)
-  #   new_item      — click a New/Create button
-  #   select_option — click first option in a list
-  #
-  # Example:
+  # SPA example — wait for a readiness signal before screenshotting:
+  # - id: dashboard-01
+  #   section: dashboard
+  #   url: /dashboard
+  #   question: Has the dashboard loaded with widgets visible?
+  #   wait_for: '[data-test="dashboard-loaded"]'
+  #   wait_ms: 500
+
+  # Pre-action example — click something before screenshotting:
   # - id: notes-01
   #   section: notes
   #   url: /notes
-  #   question: Do folders and notes load without an infinite spinner?
+  #   question: Is the note editor visible with content rendered?
   #   pre_action:
   #     type: click
   #     selector: 'text=My Note'
+  #
+  # pre_action types: click, type_and_verify, open_first, drag, new_item,
+  #                   select_option, reload, wait
 `, urlFlag, emailFlag)
 
 		out := "lookout.yaml"
@@ -97,9 +111,10 @@ tests:
 		fmt.Println("✓ Created lookout.yaml")
 		fmt.Println()
 		fmt.Println("Next steps:")
-		fmt.Println("  1. Add your tests to lookout.yaml")
+		fmt.Println("  1. Edit lookout.yaml — add your tests")
 		fmt.Println("  2. export LOOKOUT_PASSWORD='yourpassword'")
-		fmt.Println("  3. lookout run")
+		fmt.Println("  3. lookout validate    # sanity-check your spec")
+		fmt.Println("  4. lookout run")
 
 		return nil
 	},
