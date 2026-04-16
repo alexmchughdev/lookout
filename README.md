@@ -33,6 +33,7 @@ ollama pull gemma3:12b
 ```bash
 lookout init --url https://myapp.com --email me@example.com
 export LOOKOUT_PASSWORD='mypassword'
+lookout validate        # sanity-check the spec
 lookout run
 ```
 
@@ -45,8 +46,28 @@ lookout run tests.yaml --sections auth,dashboard     # specific sections
 lookout run tests.yaml --build abc1234               # tag report with build
 lookout run tests.yaml --debug                       # embed all screenshots
 lookout run tests.yaml --headed                      # visible browser
+lookout run tests.yaml --retry 2                     # retry flaky tests up to 2x
+lookout run tests.yaml --junit results.xml           # JUnit XML for CI
+lookout run tests.yaml --json   results.json         # machine-readable JSON
 lookout run tests.yaml --provider anthropic --api-key sk-ant-...  # Claude API
+lookout validate tests.yaml                          # check spec without running
 lookout models                                       # list recommended models
+```
+
+## CI integration
+
+`lookout run` exits non-zero if any test fails, so it slots straight into CI:
+
+```yaml
+# .github/workflows/qa.yml
+- run: lookout run tests.yaml --junit junit.xml --retry 1 --build ${{ github.sha }}
+- uses: actions/upload-artifact@v4
+  if: always()
+  with:
+    name: lookout-report
+    path: |
+      reports/*.html
+      junit.xml
 ```
 
 ## YAML spec format
@@ -56,6 +77,7 @@ app:
   url: https://myapp.com
   auth:
     type: email_password
+    login_path: /login            # override if login page isn't at /login
     email: qa@myapp.com
     password: ""                  # or: export LOOKOUT_PASSWORD
     # continue_button: 'button:has-text("Continue")'
@@ -75,6 +97,14 @@ tests:
     url: /login
     question: Is a login form visible with email and password fields?
 
+  - id: dashboard-01
+    section: dashboard
+    url: /dashboard
+    question: Has the dashboard loaded with widgets visible?
+    wait_for: '.dashboard-loaded'   # CSS selector to wait for
+    wait_ms: 1000                   # extra settle time
+    full_page: true                 # default true; set false for viewport-only
+
   - id: notes-persist
     section: notes
     url: /notes
@@ -85,6 +115,19 @@ tests:
       editor_selector: '[contenteditable="true"]'
       text: LOOKOUT-TEST
 ```
+
+## Test fields
+
+| Field | Description |
+|-------|-------------|
+| `id` | Unique identifier |
+| `section` | Grouping tag — filter with `--sections` |
+| `url` | Path relative to `app.url` |
+| `question` | Pass/Fail question for the vision model |
+| `wait_for` | CSS selector to wait for before screenshot (SPA hydration) |
+| `wait_ms` | Extra delay in ms after navigation / pre-action |
+| `full_page` | Capture entire scrollable page (default `true`) |
+| `pre_action` | Optional interaction before screenshot (see below) |
 
 ## Pre-actions
 
