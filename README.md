@@ -37,6 +37,27 @@ lookout validate        # sanity-check the spec
 lookout run
 ```
 
+## Apps behind MFA / SSO
+
+If your app uses Microsoft 2FA, Okta, Google SSO, or any flow that needs a
+human at login time, automatic login won't work. Use **session auth** instead:
+log in once via a headed browser, and lookout reuses the cookies on every run.
+
+```yaml
+# in your spec
+auth:
+  type: session
+  session_file: .lookout/session.json   # default; add to .gitignore
+```
+
+```bash
+lookout auth              # opens headed browser — sign in (including MFA), press Enter
+lookout run               # reuses the saved session — no login step
+# re-run `lookout auth` when the session expires (typically days)
+```
+
+The saved file contains auth cookies — keep it out of version control.
+
 ## Usage
 
 ```bash

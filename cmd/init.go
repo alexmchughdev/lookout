@@ -41,6 +41,12 @@ app:
     # success_url_excludes: /login       # login is "done" when URL no longer contains this
     # Two-step flow (email → Continue → password):
     # continue_button: 'button:has-text("Continue")'
+    #
+    # For apps behind MFA / SSO (Microsoft, Okta, Google, etc.):
+    #   1. Change the line above to  type: session
+    #   2. Run once:  lookout auth        (headed browser — log in manually)
+    #   3. Subsequent 'lookout run' reuses the saved session.
+    # session_file: .lookout/session.json
 
 # Model — defaults to local Ollama (free, private). Run: ollama pull gemma3:12b
 model:
