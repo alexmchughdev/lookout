@@ -64,6 +64,12 @@ The saved file contains auth cookies — keep it out of version control.
 
 ## Usage
 
+**Got a test spec PDF?** The built-in `lookout run spec.pdf` uses a local model
+and is hit-or-miss on complex specs. For reliable conversion, paste the prompt
+at [`docs/prompts/pdf-to-yaml.md`](docs/prompts/pdf-to-yaml.md) into Claude
+(or your LLM of choice) along with the PDF — it emits a clean YAML you can
+drop into `lookout run`.
+
 ```bash
 lookout run tests.yaml                              # YAML spec
 lookout run spec.pdf --url https://myapp.com         # PDF spec (parsed locally)
