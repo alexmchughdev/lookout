@@ -46,6 +46,7 @@ func Execute() {
 func init() {
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(authCmd)
 	rootCmd.AddCommand(validateCmd)
 	rootCmd.AddCommand(modelsCmd)
 	rootCmd.AddCommand(installBrowsersCmd)

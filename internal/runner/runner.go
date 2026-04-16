@@ -62,9 +62,33 @@ func Run(spec *config.Spec, opts Options) ([]*Result, error) {
 	}
 	defer session.Cancel()
 
-	// Login
-	if err := auth.Login(session, spec.App.URL, spec.App.Auth); err != nil {
-		return nil, err
+	// Authenticate
+	if spec.App.Auth.Type == "session" {
+		// Navigate to app origin first so localStorage writes land in the right partition.
+		if err := session.Navigate(spec.App.URL); err != nil {
+			return nil, fmt.Errorf("navigating to app before session restore: %w", err)
+		}
+		if _, err := session.RestoreSession(spec.App.Auth.SessionFile); err != nil {
+			return nil, err
+		}
+		// Reload so the server sees the injected cookies.
+		if err := session.Navigate(spec.App.URL); err != nil {
+			return nil, fmt.Errorf("navigating after session restore: %w", err)
+		}
+		// If we land on the login page, the session has expired.
+		if exclude := spec.App.Auth.SuccessURLExcludes; exclude != "" {
+			u, _ := session.CurrentURL()
+			if strings.Contains(u, exclude) {
+				return nil, fmt.Errorf(
+					"session appears expired (landed on %s) — re-run 'lookout auth'",
+					u,
+				)
+			}
+		}
+	} else {
+		if err := auth.Login(session, spec.App.URL, spec.App.Auth); err != nil {
+			return nil, err
+		}
 	}
 
 	// Run tests

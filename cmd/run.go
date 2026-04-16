@@ -136,11 +136,12 @@ func runSuite(args []string) error {
 		s.App.Auth.Password = os.Getenv("LOOKOUT_PASSWORD")
 	}
 
-	if s.App.Auth.Email == "" || s.App.Auth.Password == "" {
+	if s.App.Auth.Type != "session" && (s.App.Auth.Email == "" || s.App.Auth.Password == "") {
 		return fmt.Errorf(
 			"no credentials found\n" +
 				"  Provide --email/--password, set them in the spec,\n" +
-				"  or set LOOKOUT_EMAIL / LOOKOUT_PASSWORD env vars",
+				"  or set LOOKOUT_EMAIL / LOOKOUT_PASSWORD env vars\n" +
+				"  (or use `lookout auth` + `auth.type: session` for MFA-gated apps)",
 		)
 	}
 
