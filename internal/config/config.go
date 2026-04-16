@@ -9,6 +9,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// DefaultSessionFile is where `lookout auth` stores the captured session
+// state and where `lookout run` looks for it (when auth.type: session).
+const DefaultSessionFile = ".lookout/session.json"
+
 // ModelConfig holds vision model settings.
 type ModelConfig struct {
 	Provider string `yaml:"provider"` // ollama | anthropic | openai
@@ -34,8 +38,9 @@ func (m *ModelConfig) SetDefaults() {
 
 // AuthConfig holds login flow settings.
 type AuthConfig struct {
-	Type               string `yaml:"type"`                 // email_password
+	Type               string `yaml:"type"`                 // email_password | session
 	LoginPath          string `yaml:"login_path"`           // path to login page, default "/login"
+	SessionFile        string `yaml:"session_file"`         // path to saved session (type=session)
 	EmailField         string `yaml:"email_field"`
 	ContinueButton     string `yaml:"continue_button"`      // optional two-step
 	PasswordField      string `yaml:"password_field"`
@@ -51,6 +56,9 @@ func (a *AuthConfig) SetDefaults() {
 	}
 	if a.LoginPath == "" {
 		a.LoginPath = "/login"
+	}
+	if a.SessionFile == "" {
+		a.SessionFile = DefaultSessionFile
 	}
 	if a.EmailField == "" {
 		a.EmailField = `input[type="email"]`
