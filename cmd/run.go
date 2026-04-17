@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 
@@ -33,6 +35,7 @@ var (
 	flagHeaded   bool
 	flagNoReport bool
 	flagNoPreflight bool
+	flagNoOpen   bool
 )
 
 var runCmd = &cobra.Command{
@@ -74,6 +77,44 @@ func init() {
 	runCmd.Flags().BoolVar(&flagHeaded, "headed", false, "Run browser in headed mode")
 	runCmd.Flags().BoolVar(&flagNoReport, "no-report", false, "Skip HTML report generation")
 	runCmd.Flags().BoolVar(&flagNoPreflight, "no-preflight", false, "Skip vision model reachability check")
+	runCmd.Flags().BoolVar(&flagNoOpen, "no-open", false, "Don't open the HTML report in a browser after the run")
+}
+
+// shouldOpenReport returns true if we're in an interactive context where
+// auto-opening the HTML report makes sense: TTY stdout, DISPLAY set on
+// Linux, not running in CI.
+func shouldOpenReport() bool {
+	if flagNoOpen {
+		return false
+	}
+	if os.Getenv("CI") != "" || os.Getenv("GITHUB_ACTIONS") != "" {
+		return false
+	}
+	fi, err := os.Stdout.Stat()
+	if err != nil || (fi.Mode()&os.ModeCharDevice) == 0 {
+		return false
+	}
+	if runtime.GOOS == "linux" &&
+		os.Getenv("DISPLAY") == "" &&
+		os.Getenv("WAYLAND_DISPLAY") == "" {
+		return false
+	}
+	return true
+}
+
+// openInBrowser spawns the OS-native opener for the given file path.
+// Detaches — we don't wait for the browser to close.
+func openInBrowser(path string) error {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = exec.Command("open", path)
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "start", "", path)
+	default:
+		cmd = exec.Command("xdg-open", path)
+	}
+	return cmd.Start()
 }
 
 func runSuite(args []string) error {
@@ -285,12 +326,14 @@ func runSuite(args []string) error {
 	faint.Printf("  Done in %s\n", duration.Round(time.Second))
 
 	// Report
+	var reportPath string
 	if !flagNoReport {
-		path, err := report.Write(results, s, duration, flagOutput, buildID, flagDebug)
+		p, err := report.Write(results, s, duration, flagOutput, buildID, flagDebug)
 		if err != nil {
 			yellow.Printf("  ⚠  report error: %v\n", err)
 		} else {
-			faint.Printf("  Report: %s\n", path)
+			reportPath = p
+			faint.Printf("  Report: %s\n", p)
 		}
 	}
 	if flagJUnit != "" {
@@ -309,6 +352,12 @@ func runSuite(args []string) error {
 	}
 
 	fmt.Println(strings.Repeat("═", 52))
+
+	if reportPath != "" && shouldOpenReport() {
+		if err := openInBrowser(reportPath); err != nil {
+			faint.Printf("  (couldn't auto-open report: %v)\n", err)
+		}
+	}
 
 	if failC > 0 {
 		os.Exit(1)
