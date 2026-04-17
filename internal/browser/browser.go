@@ -37,9 +37,13 @@ func New(headless bool) (*Session, error) {
 		chromedp.DisableGPU,
 		chromedp.NoSandbox,
 		chromedp.UserDataDir(profileDir),
+		// Desktop viewport — without this chromedp defaults to a tiny
+		// window that forces responsive/mobile layouts in most apps.
+		chromedp.WindowSize(1440, 900),
 		chromedp.Flag("no-first-run", true),
 		chromedp.Flag("no-default-browser-check", true),
 		chromedp.Flag("disable-dev-shm-usage", true),
+		chromedp.Flag("force-device-scale-factor", "1"),
 	}
 	if headless {
 		opts = append(opts, chromedp.Headless)
