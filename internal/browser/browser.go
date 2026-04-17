@@ -28,24 +28,21 @@ func New(headless bool) (*Session, error) {
 		return nil, fmt.Errorf("creating temp profile dir: %w", err)
 	}
 
-	opts := chromedp.DefaultExecAllocatorOptions[:]
-	opts = append(opts,
+	// Build options from scratch — chromedp.DefaultExecAllocatorOptions
+	// includes chromedp.Headless, and there's no way to reliably remove it
+	// from an option slice once set.
+	opts := []chromedp.ExecAllocatorOption{
+		chromedp.NoFirstRun,
+		chromedp.NoDefaultBrowserCheck,
+		chromedp.DisableGPU,
+		chromedp.NoSandbox,
 		chromedp.UserDataDir(profileDir),
 		chromedp.Flag("no-first-run", true),
 		chromedp.Flag("no-default-browser-check", true),
 		chromedp.Flag("disable-dev-shm-usage", true),
-		chromedp.NoSandbox,
-	)
-
+	}
 	if headless {
 		opts = append(opts, chromedp.Headless)
-	} else {
-		// Remove the headless flag when running headed
-		filtered := opts[:0]
-		for _, o := range opts {
-			filtered = append(filtered, o)
-		}
-		opts = filtered
 	}
 
 	allocCtx, allocCancel := chromedp.NewExecAllocator(context.Background(), opts...)
