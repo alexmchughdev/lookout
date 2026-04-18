@@ -78,6 +78,7 @@ PKG=""
 if   command -v apt-get >/dev/null 2>&1; then PKG="apt"
 elif command -v pacman  >/dev/null 2>&1; then PKG="pacman"
 elif command -v dnf     >/dev/null 2>&1; then PKG="dnf"
+elif command -v zypper  >/dev/null 2>&1; then PKG="zypper"
 elif command -v brew    >/dev/null 2>&1; then PKG="brew"
 fi
 if [[ -n "$PKG" ]]; then info "package manager: $PKG"; fi
@@ -88,25 +89,45 @@ install_pkg() {
     apt)    sudo apt-get update -qq && sudo apt-get install -y "$name" ;;
     pacman) sudo pacman -S --noconfirm "$name" ;;
     dnf)    sudo dnf install -y "$name" ;;
+    zypper) sudo zypper --non-interactive install "$name" ;;
     brew)   brew install "$name" ;;
     *)      err "no supported package manager; install $name manually"; return 1 ;;
   esac
+}
+
+# Verify Go meets the module's minimum version (1.22). Distro-packaged Go on
+# Debian 12, Ubuntu 22.04, and older Fedora is too old to build lookout.
+check_go_version() {
+  local min_major=1 min_minor=22
+  local v major minor
+  v=$(go version 2>/dev/null | awk '{print $3}' | sed 's/^go//')
+  major=${v%%.*}
+  minor=${v#*.}; minor=${minor%%.*}
+  if [[ -z "$major" || -z "$minor" ]]; then return 1; fi
+  if (( major > min_major )); then return 0; fi
+  if (( major == min_major && minor >= min_minor )); then return 0; fi
+  err "Go $v is too old — lookout requires Go ${min_major}.${min_minor}+"
+  err "Your distro's packaged Go is behind. Install a current version from https://go.dev/dl/"
+  err "or use a version manager like asdf/gvm."
+  return 1
 }
 
 # ── 1. Go toolchain (build dependency) ────────────────────────────────────────
 step "1/5  Go toolchain"
 if command -v go >/dev/null 2>&1; then
   ok "Go $(go version | awk '{print $3}') already installed"
+  check_go_version || exit 1
 else
   warn "Go not found — needed to build lookout"
   if confirm "Install Go via $PKG?"; then
     case "$PKG" in
-      apt|dnf) install_pkg golang ;;
-      pacman)  install_pkg go ;;
-      brew)    install_pkg go ;;
-      *)       err "install Go from https://go.dev/dl/ and re-run"; exit 1 ;;
+      apt|dnf|zypper) install_pkg golang ;;
+      pacman)         install_pkg go ;;
+      brew)           install_pkg go ;;
+      *)              err "install Go from https://go.dev/dl/ and re-run"; exit 1 ;;
     esac
     ok "Go installed"
+    check_go_version || exit 1
   else
     err "Go is required to build. Aborting."; exit 1
   fi
@@ -132,9 +153,10 @@ else
   warn "No Chromium/Chrome binary found"
   if confirm "Install Chromium via $PKG?"; then
     case "$PKG" in
-      apt)    install_pkg chromium-browser || install_pkg chromium ;;
+      apt)    install_pkg chromium || install_pkg chromium-browser ;;
       pacman) install_pkg chromium ;;
       dnf)    install_pkg chromium ;;
+      zypper) install_pkg chromium ;;
       brew)   brew install --cask chromium ;;
       *)      err "install Chromium manually and re-run"; exit 1 ;;
     esac
