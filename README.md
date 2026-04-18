@@ -76,19 +76,32 @@ at [`docs/prompts/pdf-to-yaml.md`](docs/prompts/pdf-to-yaml.md) into Claude
 drop into `lookout run`.
 
 ```bash
-lookout run tests.yaml                              # YAML spec
+lookout init                                         # scaffold a lookout.yaml
+lookout validate tests.yaml                          # sanity-check a spec
+lookout auth                                         # capture login session for MFA/SSO apps
+lookout run tests.yaml                               # YAML spec
 lookout run spec.pdf --url https://myapp.com         # PDF spec (parsed locally)
 lookout run tests.yaml --sections auth,dashboard     # specific sections
 lookout run tests.yaml --build abc1234               # tag report with build
-lookout run tests.yaml --debug                       # embed all screenshots
 lookout run tests.yaml --headed                      # visible browser
 lookout run tests.yaml --retry 2                     # retry flaky tests up to 2x
 lookout run tests.yaml --junit results.xml           # JUnit XML for CI
 lookout run tests.yaml --json   results.json         # machine-readable JSON
 lookout run tests.yaml --provider anthropic --api-key sk-ant-...  # Claude API
-lookout validate tests.yaml                          # check spec without running
 lookout models                                       # list recommended models
+
+# CI / unattended opt-outs
+lookout run tests.yaml --no-open          # don't auto-open the HTML report
+lookout run tests.yaml --no-gpu-monitor   # don't pop a GPU-stats window
+lookout run tests.yaml --no-screenshots   # minimal report, no embedded images
+lookout run tests.yaml --no-preflight     # skip the vision-model reachability check
+lookout run tests.yaml --no-report        # skip HTML report generation
 ```
+
+On an interactive desktop `lookout run` auto-opens the HTML report in your
+browser and pops a second terminal running `nvtop` (or equivalent) so you can
+watch the vision model light up your GPU. Both auto-detect and silently skip
+in CI or headless contexts — no flag needed.
 
 ## CI integration
 
@@ -190,27 +203,32 @@ tests:
 
 | Variable | Description |
 |----------|-------------|
-| `LOOKOUT_EMAIL` | Login email |
-| `LOOKOUT_PASSWORD` | Login password |
+| `LOOKOUT_EMAIL` | Login email (email_password auth) |
+| `LOOKOUT_PASSWORD` | Login password (email_password auth) |
 | `LOOKOUT_API_KEY` | API key for anthropic/openai |
 | `LOOKOUT_BUILD` | Build ID for report |
+| `LOOKOUT_TERMINAL` | Override the terminal emulator used for the GPU-stats window |
 
 ## Architecture
 
 ```
 lookout run spec.yaml
        │
-       ├─ spec loaded (YAML or PDF parsed via Ollama vision)
-       ├─ chromedp launches Chrome (zero runtime deps)
-       ├─ deterministic login (two-step auth aware)
+       ├─ spec loaded + validated (YAML, or PDF via local vision)
+       ├─ vision model preflight (fail fast if Ollama/API unreachable)
+       ├─ chromedp launches Chrome at 1440×900
+       ├─ auth: deterministic email/password OR restore saved session
+       │        (lookout auth captures SSO / MFA sessions once)
        │
        └─ for each test:
               ├─ navigate to URL
-              ├─ optional pre-action (click, drag, type)
-              ├─ screenshot captured
-              └─ vision model: Pass / Fail + one-sentence note
+              ├─ optional pre-action (click, drag, type, reload, ...)
+              ├─ wait_for selector / wait_ms for SPA hydration
+              ├─ full-page screenshot captured
+              └─ vision model: Pass / Fail / Blocked / Skipped + one-sentence note
                        │
-                       └─ HTML report with embedded screenshots
+                       ├─ retry on Fail/Blocked (--retry N)
+                       └─ HTML + JUnit XML + JSON report outputs
 ```
 
 ## Cross-compile
