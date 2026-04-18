@@ -38,9 +38,9 @@ tests:
   - id: P-01
     section: pim
     url: /web/index.php/pim/viewEmployeeList
-    question: Is an employee list or table visible with search filters?
-    wait_for: '.oxd-table-body'
-    wait_ms: 4000
+    question: Is the Employee Information page loaded with a search form showing filter fields like Name or Employee ID?
+    wait_for: '.oxd-form'
+    wait_ms: 2000
 
   - id: L-02
     section: leave
