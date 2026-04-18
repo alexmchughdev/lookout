@@ -13,7 +13,7 @@
 **One-liner** (clones, installs deps, builds, installs to `/usr/local/bin`):
 
 ```bash
-git clone https://github.com/AlexMcHugh1/lookout && cd lookout && ./install.sh
+git clone https://github.com/alexmchughdev/lookout && cd lookout && ./install.sh
 ```
 
 The installer handles Chromium, Ollama, the default vision model (`gemma3:12b`),
@@ -23,7 +23,7 @@ and the Go build. Flags: `--yes` (skip prompts), `--no-model`, `--model NAME`,
 **Manual** if you'd rather:
 
 ```bash
-git clone https://github.com/AlexMcHugh1/lookout
+git clone https://github.com/alexmchughdev/lookout
 cd lookout
 make build
 sudo mv lookout /usr/local/bin/

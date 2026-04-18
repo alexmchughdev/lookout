@@ -25,7 +25,7 @@ var initCmd = &cobra.Command{
 			fmt.Scan(&emailFlag)
 		}
 
-		template := fmt.Sprintf(`# lookout test spec — https://github.com/AlexMcHugh1/lookout
+		template := fmt.Sprintf(`# lookout test spec — https://github.com/alexmchughdev/lookout
 # Run: lookout run
 
 app:

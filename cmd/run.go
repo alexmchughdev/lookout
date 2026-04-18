@@ -12,11 +12,11 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/AlexMcHugh1/lookout/internal/config"
-	"github.com/AlexMcHugh1/lookout/internal/report"
-	"github.com/AlexMcHugh1/lookout/internal/runner"
-	"github.com/AlexMcHugh1/lookout/internal/spec"
-	"github.com/AlexMcHugh1/lookout/internal/vision"
+	"github.com/alexmchughdev/lookout/internal/config"
+	"github.com/alexmchughdev/lookout/internal/report"
+	"github.com/alexmchughdev/lookout/internal/runner"
+	"github.com/alexmchughdev/lookout/internal/spec"
+	"github.com/alexmchughdev/lookout/internal/vision"
 )
 
 var (

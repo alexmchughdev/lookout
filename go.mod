@@ -1,4 +1,4 @@
-module github.com/AlexMcHugh1/lookout
+module github.com/alexmchughdev/lookout
 
 go 1.22
 

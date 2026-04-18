@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexMcHugh1/lookout/internal/browser"
-	"github.com/AlexMcHugh1/lookout/internal/config"
+	"github.com/alexmchughdev/lookout/internal/browser"
+	"github.com/alexmchughdev/lookout/internal/config"
 )
 
 // Run executes a pre-action defined in the spec.

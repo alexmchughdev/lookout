@@ -8,9 +8,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/AlexMcHugh1/lookout/internal/browser"
-	"github.com/AlexMcHugh1/lookout/internal/config"
-	"github.com/AlexMcHugh1/lookout/internal/spec"
+	"github.com/alexmchughdev/lookout/internal/browser"
+	"github.com/alexmchughdev/lookout/internal/config"
+	"github.com/alexmchughdev/lookout/internal/spec"
 )
 
 var authCmd = &cobra.Command{

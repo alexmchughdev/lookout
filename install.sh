@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# lookout installer — https://github.com/AlexMcHugh1/lookout
+# lookout installer — https://github.com/alexmchughdev/lookout
 #
 # Usage:
 #   ./install.sh                    # interactive
@@ -189,7 +189,7 @@ cd "$SCRIPT_DIR"
 
 if [[ ! -f go.mod ]]; then
   err "This script must be run from the lookout source tree (go.mod missing)."
-  err "Clone the repo first:  git clone https://github.com/AlexMcHugh1/lookout"
+  err "Clone the repo first:  git clone https://github.com/alexmchughdev/lookout"
   exit 1
 fi
 
@@ -228,5 +228,5 @@ ${GREEN}${BOLD}Installed.${RESET} Next steps:
   ${DIM}# run${RESET}
   lookout run
 
-Docs: https://github.com/AlexMcHugh1/lookout
+Docs: https://github.com/alexmchughdev/lookout
 EOF

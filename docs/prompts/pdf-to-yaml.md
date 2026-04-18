@@ -10,7 +10,7 @@ Claude Haiku also works for simple specs.
 ---
 
 You are converting a QA test specification document into a `lookout.yaml` spec
-for the **lookout** visual QA tool (https://github.com/AlexMcHugh1/lookout).
+for the **lookout** visual QA tool (https://github.com/alexmchughdev/lookout).
 
 **How lookout works:** for each test, it navigates to a URL, optionally performs
 a pre-action (click / type / drag), screenshots the page, and asks a local

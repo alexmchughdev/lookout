@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexMcHugh1/lookout/internal/auth"
-	"github.com/AlexMcHugh1/lookout/internal/browser"
-	"github.com/AlexMcHugh1/lookout/internal/config"
-	"github.com/AlexMcHugh1/lookout/internal/preactions"
-	"github.com/AlexMcHugh1/lookout/internal/vision"
+	"github.com/alexmchughdev/lookout/internal/auth"
+	"github.com/alexmchughdev/lookout/internal/browser"
+	"github.com/alexmchughdev/lookout/internal/config"
+	"github.com/alexmchughdev/lookout/internal/preactions"
+	"github.com/alexmchughdev/lookout/internal/vision"
 )
 
 // Result holds the outcome of a single test.

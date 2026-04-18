@@ -14,7 +14,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/AlexMcHugh1/lookout/internal/config"
+	"github.com/alexmchughdev/lookout/internal/config"
 )
 
 // Load auto-detects the file format and loads a Spec.

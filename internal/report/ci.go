@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/AlexMcHugh1/lookout/internal/config"
-	"github.com/AlexMcHugh1/lookout/internal/runner"
+	"github.com/alexmchughdev/lookout/internal/config"
+	"github.com/alexmchughdev/lookout/internal/runner"
 )
 
 // WriteJUnit writes a JUnit-style XML report consumable by GitHub Actions,

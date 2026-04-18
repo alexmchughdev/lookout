@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexMcHugh1/lookout/internal/browser"
-	"github.com/AlexMcHugh1/lookout/internal/config"
+	"github.com/alexmchughdev/lookout/internal/browser"
+	"github.com/alexmchughdev/lookout/internal/config"
 )
 
 // Login logs into the app using the provided auth config.

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/AlexMcHugh1/lookout/cmd"
+import "github.com/alexmchughdev/lookout/cmd"
 
 func main() {
 	cmd.Execute()

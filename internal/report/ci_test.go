@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlexMcHugh1/lookout/internal/config"
-	"github.com/AlexMcHugh1/lookout/internal/runner"
-	"github.com/AlexMcHugh1/lookout/internal/vision"
+	"github.com/alexmchughdev/lookout/internal/config"
+	"github.com/alexmchughdev/lookout/internal/runner"
+	"github.com/alexmchughdev/lookout/internal/vision"
 )
 
 func sampleResults() []*runner.Result {

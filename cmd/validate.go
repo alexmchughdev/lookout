@@ -7,7 +7,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/AlexMcHugh1/lookout/internal/config"
+	"github.com/alexmchughdev/lookout/internal/config"
 )
 
 var validateCmd = &cobra.Command{
