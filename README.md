@@ -365,3 +365,7 @@ make cross
 ## Licence
 
 MIT
+
+---
+
+Built by [Alex McHugh](https://alexmchugh.dev).
