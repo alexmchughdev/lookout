@@ -29,6 +29,12 @@ func (m *ModelConfig) SetDefaults() {
 		m.Name = "gemma3:12b"
 	}
 	if m.Host == "" {
+		// LOOKOUT_OLLAMA_HOST takes precedence over the hard-coded default so
+		// users running lookout in a container can point it at a sibling
+		// Ollama service (e.g. docker-compose) without editing every spec.
+		m.Host = os.Getenv("LOOKOUT_OLLAMA_HOST")
+	}
+	if m.Host == "" {
 		m.Host = "http://localhost:11434"
 	}
 	if m.APIKey == "" {

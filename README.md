@@ -39,17 +39,51 @@ straight to the API-key section below.
 
 ## Install
 
-**One-liner** (clones, installs deps, builds, installs to `/usr/local/bin`):
+Three options, pick whichever matches your setup.
+
+### Option 1 — Docker (no OS dependencies)
+
+If you have Docker, this is the simplest path. Nothing else to install:
+
+```bash
+# Run tests against any target app, using a hosted vision API
+docker run --rm \
+  -v "$PWD:/work" \
+  -e LOOKOUT_API_KEY \
+  ghcr.io/alexmchughdev/lookout:latest \
+  run tests.yaml --provider anthropic --model claude-sonnet-4-6 \
+                 --no-gpu-monitor --no-open
+```
+
+The image bundles Chromium and the lookout binary (~380 MB). Your `tests.yaml`
+and the generated `reports/` live on your host via the volume mount. Works
+identically on Linux, macOS, and Windows — Docker hides the differences.
+
+For local Ollama without installing it on the host, use the included
+[`docker-compose.yml`](docker-compose.yml) which spins up an Ollama sidecar:
+
+```bash
+docker compose up -d ollama
+docker compose exec ollama ollama pull gemma3:12b
+docker compose run --rm lookout run examples/demo.yaml --no-gpu-monitor --no-open
+```
+
+### Option 2 — `install.sh` (native install)
+
+If you want `lookout` on your `PATH`, no container wrapper:
 
 ```bash
 git clone https://github.com/alexmchughdev/lookout && cd lookout && ./install.sh
 ```
 
-The installer handles Chromium, Ollama, the default vision model (`gemma3:12b`),
-and the Go build. Flags: `--yes` (skip prompts), `--no-model`, `--model NAME`,
-`--prefix DIR`. Run `./install.sh --help` for details.
+Handles Chromium, Ollama, the default vision model (`gemma3:12b`), and the Go
+build. Detects apt / pacman / dnf / zypper / brew automatically. Flags:
+`--yes` (skip prompts), `--no-model`, `--model NAME`, `--prefix DIR`.
 
-**Manual** if you'd rather:
+Requires Go 1.22+. Debian 12 and Ubuntu 22.04 ship older Go — the installer
+will tell you to grab a current version from https://go.dev/dl/ or via asdf.
+
+### Option 3 — manual
 
 ```bash
 git clone https://github.com/alexmchughdev/lookout
@@ -61,6 +95,7 @@ sudo mv lookout /usr/local/bin/
 sudo apt install chromium           # Ubuntu / Debian
 sudo pacman -S chromium             # Arch / EndeavourOS / Manjaro
 sudo dnf install chromium           # Fedora
+sudo zypper install chromium        # openSUSE
 brew install --cask chromium        # macOS
 
 ollama pull gemma3:12b
@@ -290,6 +325,7 @@ tests:
 | `LOOKOUT_PASSWORD` | Login password (email_password auth) |
 | `LOOKOUT_API_KEY` | API key for anthropic/openai |
 | `LOOKOUT_BUILD` | Build ID for report |
+| `LOOKOUT_OLLAMA_HOST` | Override the default Ollama host (`http://localhost:11434`) — useful in docker-compose where Ollama is a sibling service |
 | `LOOKOUT_TERMINAL` | Override the terminal emulator used for the GPU-stats window |
 
 ## Architecture
