@@ -60,7 +60,7 @@ cat <<'EOF'
  / /___/ /_/ / /_/ / ,< / /_/ / /_/ / /_
 /_____/\____/\____/_/|_|\____/\__,_/\__/
 
- visual QA · local-first · single binary
+ visual QA · no agent loop
 
 EOF
 

@@ -11,8 +11,13 @@ cd lookout
 ./install.sh            # handles Go, Chromium, Ollama, gemma3:12b
 ```
 
-Or the manual path: `go build ./...` after installing Go 1.22+, Chromium, and
-Ollama with `gemma3:12b` pulled.
+Alternatives:
+
+- **Manual**: `go build ./...` after installing Go 1.22+, Chromium, and Ollama
+  with `gemma3:12b` pulled.
+- **Docker**: `docker build -t lookout-dev .` if you don't want the full
+  toolchain installed. Native is faster for iteration, but Docker is a
+  reasonable fallback.
 
 ## Before opening a PR
 

@@ -289,9 +289,13 @@ func runSuite(args []string) error {
 		}
 	}
 
-	// GPU stats window (nvtop in a new terminal). No-op if nothing suitable
-	// is available; we don't want to block the run on a cosmetic feature.
-	gpu := startGPUMonitor()
+	// GPU stats window (nvtop in a new terminal). Only worth opening when the
+	// vision model runs on local hardware — for hosted APIs or a remote
+	// Ollama the GPU stays idle during the run and the popup is just noise.
+	var gpu *gpuMonitor
+	if isLocalOllama(s.Model) {
+		gpu = startGPUMonitor()
+	}
 	defer gpu.stop()
 
 	sep := strings.Repeat("─", 52)

@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <em>visual QA · local-first · single binary</em>
+  <em>visual QA · no agent loop</em>
 </p>
 
 <p align="center">
@@ -13,7 +13,9 @@
   <a href="https://github.com/alexmchughdev/lookout/releases"><img src="https://img.shields.io/github/v/release/alexmchughdev/lookout" alt="Release"></a>
 </p>
 
-**lookout** automates E2E visual QA. chromedp navigates your app deterministically. A vision model looks at each screenshot and returns a Pass/Fail verdict. No agent loops. No cloud required by default. Single binary.
+**lookout** automates E2E visual QA. chromedp navigates your app deterministically. A vision model looks at each screenshot and returns a Pass/Fail verdict. No agent loops, no state to lose.
+
+By default the vision model runs locally via Ollama (free, private, needs a GPU). If you don't have a GPU or prefer a hosted model, plug in an Anthropic or OpenAI API key instead — see [Using a hosted vision model](#using-a-hosted-vision-model-anthropic--openai).
 
 ## Hardware requirements
 

@@ -17,7 +17,7 @@ const asciiLogo = `
 /_____/\____/\____/_/|_|\____/\__,_/\__/
 `
 
-const tagline = "visual QA · local-first · single binary"
+const tagline = "visual QA · no agent loop"
 
 var version = "0.1.0"
 

@@ -5,7 +5,26 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
+
+	"github.com/alexmchughdev/lookout/internal/config"
 )
+
+// isLocalOllama reports whether the configured model runs on local hardware
+// worth monitoring. Hosted APIs and remote Ollama leave the local GPU idle,
+// so popping nvtop would be misleading noise.
+func isLocalOllama(m config.ModelConfig) bool {
+	if m.Provider != "ollama" && m.Provider != "" {
+		return false
+	}
+	host := m.Host
+	if host == "" {
+		return true
+	}
+	return strings.Contains(host, "localhost") ||
+		strings.Contains(host, "127.0.0.1") ||
+		strings.Contains(host, "0.0.0.0")
+}
 
 // gpuMonitor wraps a spawned terminal running a GPU stats tool (nvtop,
 // nvidia-smi, radeontop, intel_gpu_top). Silent no-op if prerequisites
