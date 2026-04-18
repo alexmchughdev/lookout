@@ -56,7 +56,11 @@ func loadPDF(path string, model *config.ModelConfig, url string) (*config.Spec, 
 	pages, err := renderPDF(path)
 	if err != nil {
 		return nil, fmt.Errorf("rendering PDF pages: %w\n"+
-			"Install poppler-utils: sudo apt install poppler-utils", err)
+			"Install poppler:\n"+
+			"  Ubuntu/Debian:  sudo apt install poppler-utils\n"+
+			"  Arch:           sudo pacman -S poppler\n"+
+			"  Fedora:         sudo dnf install poppler-utils\n"+
+			"  macOS:          brew install poppler", err)
 	}
 
 	tests, err := extractTests(pages, model)

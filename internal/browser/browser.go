@@ -314,7 +314,10 @@ func FindChrome() (string, error) {
 
 	return "", fmt.Errorf(
 		"no Chrome/Chromium binary found\n" +
-			"Install Chromium: sudo apt install chromium-browser\n" +
+			"  Ubuntu/Debian:  sudo apt install chromium\n" +
+			"  Arch:           sudo pacman -S chromium\n" +
+			"  Fedora:         sudo dnf install chromium\n" +
+			"  macOS:          brew install --cask chromium\n" +
 			"Or: lookout install-browsers",
 	)
 }

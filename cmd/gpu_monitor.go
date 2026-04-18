@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 )
 
 // gpuMonitor wraps a spawned terminal running a GPU stats tool (nvtop,
@@ -46,6 +48,17 @@ func (m *gpuMonitor) stop() {
 }
 
 func pickGPUMonitor() string {
+	if runtime.GOOS == "darwin" {
+		// Apple Silicon: asitop (pip install asitop) / mactop / powermetrics.
+		if hasBin("asitop") {
+			return "asitop"
+		}
+		if hasBin("mactop") {
+			return "mactop"
+		}
+		// Nothing suitable — skip rather than pop an empty window.
+		return ""
+	}
 	if hasBin("nvidia-smi") {
 		if hasBin("nvtop") {
 			return "nvtop"
@@ -53,13 +66,13 @@ func pickGPUMonitor() string {
 		return "nvidia-smi -l 1"
 	}
 	if hasBin("nvtop") {
-		return "nvtop" // covers AMD/Intel too via libdrm
+		return "nvtop" // also covers AMD/Intel via libdrm
 	}
 	if hasBin("radeontop") {
 		return "radeontop"
 	}
 	if hasBin("intel_gpu_top") {
-		return "sudo -n intel_gpu_top" // typically needs root; -n exits if no cached sudo
+		return "sudo -n intel_gpu_top" // needs root; -n exits if no cached sudo
 	}
 	return ""
 }
@@ -72,6 +85,11 @@ func hasBin(bin string) bool {
 // spawnInTerminal finds a terminal emulator and returns an *exec.Cmd that
 // opens a new window running cmdline. Nil if no supported terminal found.
 func spawnInTerminal(cmdline string) *exec.Cmd {
+	if runtime.GOOS == "darwin" {
+		// Use AppleScript to open a new Terminal.app window running the command.
+		script := fmt.Sprintf(`tell application "Terminal" to do script %q`, cmdline)
+		return exec.Command("osascript", "-e", script)
+	}
 	type spec struct {
 		bin  string
 		args []string

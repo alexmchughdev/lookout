@@ -28,7 +28,12 @@ cd lookout
 make build
 sudo mv lookout /usr/local/bin/
 
-sudo apt install chromium-browser   # or: brew install --cask chromium
+# Chromium — pick the one for your distro
+sudo apt install chromium           # Ubuntu / Debian
+sudo pacman -S chromium             # Arch / EndeavourOS / Manjaro
+sudo dnf install chromium           # Fedora
+brew install --cask chromium        # macOS
+
 ollama pull gemma3:12b
 ```
 
