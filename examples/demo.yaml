@@ -57,7 +57,9 @@ tests:
   - id: R-01
     section: recruitment
     url: /web/index.php/recruitment/viewCandidates
-    question: Is a candidates list or recruitment dashboard visible?
+    question: Is the Recruitment Candidates page loaded with a search form showing filter fields like Job Title or Vacancy?
+    wait_for: '.oxd-form'
+    wait_ms: 2000
 
   - id: N-01
     section: nav
