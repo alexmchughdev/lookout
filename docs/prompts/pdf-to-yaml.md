@@ -4,7 +4,7 @@ Paste everything below the `---` into Claude (or any capable LLM) along with you
 test-spec PDF. It will emit a valid `lookout.yaml` you can drop straight into
 `lookout run`.
 
-Works best with **Claude Sonnet 4.5+**; Opus if the spec is long or ambiguous.
+Works best with **Claude Sonnet 4.6+**; Opus if the spec is long or ambiguous.
 Claude Haiku also works for simple specs.
 
 ---

@@ -246,7 +246,7 @@ func judgeOpenAI(b64, prompt string, model config.ModelConfig) (Verdict, error) 
 
 	modelName := model.Name
 	if modelName == "" {
-		modelName = "gpt-4o"
+		modelName = "gpt-5.4"
 	}
 
 	payload := map[string]any{

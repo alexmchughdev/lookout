@@ -28,8 +28,8 @@ needed at all).
 | Ollama + `qwen2.5vl:7b` | ~5 GB VRAM | 12 GB | 0.4–1s | Faster, less memory |
 | Ollama + `llama3.2-vision:11b` | ~7 GB VRAM | 16 GB | 0.5–1.5s | Alternative |
 | Ollama on CPU | — | 32 GB | 15–60s | Works, but slow — fine for a handful of tests |
-| Anthropic API (`claude-sonnet-4-5`) | — | 4 GB | 1–3s (network) | Highest accuracy, per-token cost |
-| OpenAI API (`gpt-4o`) | — | 4 GB | 1–3s (network) | Strong vision, per-token cost |
+| Anthropic API (`claude-sonnet-4-6`) | — | 4 GB | 1–3s (network) | Highest accuracy, per-token cost |
+| OpenAI API (`gpt-5.4`) | — | 4 GB | 1–3s (network) | Strong vision, per-token cost |
 
 Also required on the host regardless of model: Chromium (~1 GB RAM during runs)
 and Go 1.22+ if you're building from source.
@@ -87,7 +87,7 @@ Get a key at https://console.anthropic.com.
 
 ```bash
 export LOOKOUT_API_KEY=sk-ant-...
-lookout run tests.yaml --provider anthropic --model claude-sonnet-4-5
+lookout run tests.yaml --provider anthropic --model claude-sonnet-4-6
 ```
 
 Or set it in the spec and skip the flags:
@@ -95,7 +95,7 @@ Or set it in the spec and skip the flags:
 ```yaml
 model:
   provider: anthropic
-  name: claude-sonnet-4-5
+  name: claude-sonnet-4-6
   api_key: ""   # leave empty and set LOOKOUT_API_KEY, or paste here
 ```
 
@@ -105,7 +105,7 @@ Get a key at https://platform.openai.com/api-keys.
 
 ```bash
 export LOOKOUT_API_KEY=sk-...
-lookout run tests.yaml --provider openai --model gpt-4o
+lookout run tests.yaml --provider openai --model gpt-5.4
 ```
 
 Or in the spec:
@@ -113,7 +113,7 @@ Or in the spec:
 ```yaml
 model:
   provider: openai
-  name: gpt-4o
+  name: gpt-5.4
   api_key: ""
 ```
 
@@ -126,7 +126,7 @@ model:
 - **Screenshots are sent to the provider** — full-page PNGs of your app. If
   the app shows PII or other sensitive content, either keep the model local,
   use section filters, or read the provider's data-retention policy.
-- **Per-test cost**: a single Claude Sonnet 4.5 judgement on a 1440×900
+- **Per-test cost**: a single Claude Sonnet 4.6 judgement on a 1440×900
   screenshot is typically under 2¢. 30 tests costs less than a coffee.
 
 ## Apps behind MFA / SSO

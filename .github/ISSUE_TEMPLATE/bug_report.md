@@ -40,7 +40,7 @@ paste the full output here
 - OS: <!-- e.g. Ubuntu 22.04, macOS 14.4, Arch -->
 - Go version: <!-- `go version` if you built from source -->
 - Browser: <!-- output of `which chromium` or similar -->
-- Vision provider: <!-- ollama gemma3:12b, anthropic claude-sonnet-4-5, openai gpt-4o -->
+- Vision provider: <!-- ollama gemma3:12b, anthropic claude-sonnet-4-6, openai gpt-5.4 -->
 
 ### Screenshots
 

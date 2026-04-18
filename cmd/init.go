@@ -56,11 +56,11 @@ model:
   #
   # To use a hosted API instead, comment out the above and uncomment one:
   # provider: anthropic
-  # name: claude-sonnet-4-5
+  # name: claude-sonnet-4-6
   # api_key: sk-ant-...                  # or: export LOOKOUT_API_KEY='...'
   #
   # provider: openai
-  # name: gpt-4o
+  # name: gpt-5.4
 
 tests:
   # Each test: navigate → (optional pre_action) → (optional wait) → screenshot → vision model answers question.
@@ -148,8 +148,8 @@ var modelsCmd = &cobra.Command{
 			{"gemma3:12b", "ollama", "~8GB", "Best local default. Vision capable."},
 			{"qwen2.5vl:7b", "ollama", "~5GB", "Faster, less VRAM."},
 			{"llama3.2-vision:11b", "ollama", "~7GB", "Strong vision."},
-			{"claude-sonnet-4-5", "anthropic", "API", "Highest accuracy. Requires API key."},
-			{"gpt-4o", "openai", "API", "Strong vision. Requires API key."},
+			{"claude-sonnet-4-6", "anthropic", "API", "Highest accuracy. Requires API key."},
+			{"gpt-5.4", "openai", "API", "Strong vision. Requires API key."},
 		}
 
 		for _, r := range rows {
