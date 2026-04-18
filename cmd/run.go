@@ -36,6 +36,7 @@ var (
 	flagNoReport bool
 	flagNoPreflight bool
 	flagNoOpen   bool
+	flagNoGPU    bool
 )
 
 var runCmd = &cobra.Command{
@@ -78,15 +79,12 @@ func init() {
 	runCmd.Flags().BoolVar(&flagNoReport, "no-report", false, "Skip HTML report generation")
 	runCmd.Flags().BoolVar(&flagNoPreflight, "no-preflight", false, "Skip vision model reachability check")
 	runCmd.Flags().BoolVar(&flagNoOpen, "no-open", false, "Don't open the HTML report in a browser after the run")
+	runCmd.Flags().BoolVar(&flagNoGPU, "no-gpu-monitor", false, "Don't pop a GPU-stats terminal during the run")
 }
 
-// shouldOpenReport returns true if we're in an interactive context where
-// auto-opening the HTML report makes sense: TTY stdout, DISPLAY set on
-// Linux, not running in CI.
-func shouldOpenReport() bool {
-	if flagNoOpen {
-		return false
-	}
+// isInteractiveDisplay reports whether we're on a graphical desktop with a
+// real TTY attached — used to gate auto-opening a browser / GPU monitor.
+func isInteractiveDisplay() bool {
 	if os.Getenv("CI") != "" || os.Getenv("GITHUB_ACTIONS") != "" {
 		return false
 	}
@@ -100,6 +98,11 @@ func shouldOpenReport() bool {
 		return false
 	}
 	return true
+}
+
+// shouldOpenReport returns true if we should auto-open the HTML report.
+func shouldOpenReport() bool {
+	return !flagNoOpen && isInteractiveDisplay()
 }
 
 // openInBrowser spawns the OS-native opener for the given file path.
@@ -231,6 +234,11 @@ func runSuite(args []string) error {
 			return fmt.Errorf("preflight failed: %w", err)
 		}
 	}
+
+	// GPU stats window (nvtop in a new terminal). No-op if nothing suitable
+	// is available; we don't want to block the run on a cosmetic feature.
+	gpu := startGPUMonitor()
+	defer gpu.stop()
 
 	sep := strings.Repeat("─", 52)
 	fmt.Println(sep)
