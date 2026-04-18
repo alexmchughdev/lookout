@@ -105,19 +105,52 @@ func shouldOpenReport() bool {
 	return !flagNoOpen && isInteractiveDisplay()
 }
 
-// openInBrowser spawns the OS-native opener for the given file path.
-// Detaches — we don't wait for the browser to close.
+// openInBrowser spawns a browser window for the given file path and detaches.
+// On Linux we bypass xdg-open because it routes text/html through mailcap,
+// and broken mailcap entries (pointing at terminal editors like micro) are
+// common on desktop distros. We try real browser binaries directly instead.
 func openInBrowser(path string) error {
-	var cmd *exec.Cmd
-	switch runtime.GOOS {
-	case "darwin":
-		cmd = exec.Command("open", path)
-	case "windows":
-		cmd = exec.Command("cmd", "/c", "start", "", path)
-	default:
-		cmd = exec.Command("xdg-open", path)
+	if runtime.GOOS == "darwin" {
+		return exec.Command("open", path).Start()
 	}
-	return cmd.Start()
+	if runtime.GOOS == "windows" {
+		return exec.Command("cmd", "/c", "start", "", path).Start()
+	}
+
+	fileURL := "file://" + path
+
+	// Respect $BROWSER (can be a colon-separated list) first.
+	for _, b := range strings.Split(os.Getenv("BROWSER"), ":") {
+		b = strings.TrimSpace(b)
+		if b == "" {
+			continue
+		}
+		if _, err := exec.LookPath(b); err != nil {
+			continue
+		}
+		return exec.Command(b, fileURL).Start()
+	}
+
+	for _, b := range []string{
+		"firefox",
+		"google-chrome",
+		"google-chrome-stable",
+		"chromium",
+		"chromium-browser",
+		"brave",
+		"brave-browser",
+		"microsoft-edge",
+		"vivaldi",
+		"sensible-browser",
+		"x-www-browser",
+		"xdg-open", // last resort
+	} {
+		if _, err := exec.LookPath(b); err != nil {
+			continue
+		}
+		return exec.Command(b, fileURL).Start()
+	}
+	return fmt.Errorf("no browser found on PATH")
 }
 
 func runSuite(args []string) error {
