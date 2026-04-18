@@ -20,8 +20,8 @@ model:
 tests:
   - id: L-01
     section: auth
-    url: /web/index.php/auth/login
-    question: Is a login form visible with username and password fields?
+    url: /web/index.php/dashboard/index
+    question: Is the logged-in user profile indicator visible in the top-right of the header, confirming the login flow succeeded?
 
   - id: D-01
     section: dashboard
@@ -39,6 +39,8 @@ tests:
     section: pim
     url: /web/index.php/pim/viewEmployeeList
     question: Is an employee list or table visible with search filters?
+    wait_for: '.oxd-table'
+    wait_ms: 1500
 
   - id: L-02
     section: leave
@@ -48,7 +50,9 @@ tests:
   - id: T-01
     section: time
     url: /web/index.php/time/viewEmployeeTimesheet
-    question: Is a timesheet interface visible?
+    question: Is the Time module page loaded showing an Employee Timesheets heading or filter section?
+    wait_for: '.oxd-topbar'
+    wait_ms: 2000
 
   - id: R-01
     section: recruitment
