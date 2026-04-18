@@ -6,7 +6,36 @@
   <em>visual QA · local-first · single binary</em>
 </p>
 
-**lookout** automates E2E visual QA. chromedp navigates your app deterministically. A local vision model looks at each screenshot and returns a Pass/Fail verdict. No agent loops. No cloud required. Single binary.
+<p align="center">
+  <a href="https://github.com/alexmchughdev/lookout/actions/workflows/ci.yml"><img src="https://github.com/alexmchughdev/lookout/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
+  <a href="go.mod"><img src="https://img.shields.io/badge/go-1.22%2B-00ADD8?logo=go" alt="Go 1.22+"></a>
+  <a href="https://github.com/alexmchughdev/lookout/releases"><img src="https://img.shields.io/github/v/release/alexmchughdev/lookout" alt="Release"></a>
+</p>
+
+**lookout** automates E2E visual QA. chromedp navigates your app deterministically. A vision model looks at each screenshot and returns a Pass/Fail verdict. No agent loops. No cloud required by default. Single binary.
+
+## Hardware requirements
+
+lookout needs Chromium (to drive the browser) and a vision model (to judge
+screenshots). The model is the only expensive dependency — you can run it
+locally on a GPU, locally on CPU (slower), or via a hosted API (no GPU
+needed at all).
+
+| Setup | GPU | RAM | Per-test latency | Notes |
+|-------|-----|-----|------------------|-------|
+| Ollama + `gemma3:12b` (default) | ~8 GB VRAM | 16 GB | 0.5–1.5s | Best local accuracy / speed tradeoff |
+| Ollama + `qwen2.5vl:7b` | ~5 GB VRAM | 12 GB | 0.4–1s | Faster, less memory |
+| Ollama + `llama3.2-vision:11b` | ~7 GB VRAM | 16 GB | 0.5–1.5s | Alternative |
+| Ollama on CPU | — | 32 GB | 15–60s | Works, but slow — fine for a handful of tests |
+| Anthropic API (`claude-sonnet-4-5`) | — | 4 GB | 1–3s (network) | Highest accuracy, per-token cost |
+| OpenAI API (`gpt-4o`) | — | 4 GB | 1–3s (network) | Strong vision, per-token cost |
+
+Also required on the host regardless of model: Chromium (~1 GB RAM during runs)
+and Go 1.22+ if you're building from source.
+
+If you don't have a GPU and don't want to wait for CPU inference, skip
+straight to the API-key section below.
 
 ## Install
 
@@ -45,6 +74,60 @@ export LOOKOUT_PASSWORD='mypassword'
 lookout validate        # sanity-check the spec
 lookout run
 ```
+
+## Using a hosted vision model (Anthropic / OpenAI)
+
+No GPU? Don't want to run Ollama? Use a cloud API instead. You pay per token
+(usually fractions of a cent per test), but everything else — the deterministic
+browser driving, the spec format, the report — stays identical.
+
+### Anthropic (Claude)
+
+Get a key at https://console.anthropic.com.
+
+```bash
+export LOOKOUT_API_KEY=sk-ant-...
+lookout run tests.yaml --provider anthropic --model claude-sonnet-4-5
+```
+
+Or set it in the spec and skip the flags:
+
+```yaml
+model:
+  provider: anthropic
+  name: claude-sonnet-4-5
+  api_key: ""   # leave empty and set LOOKOUT_API_KEY, or paste here
+```
+
+### OpenAI
+
+Get a key at https://platform.openai.com/api-keys.
+
+```bash
+export LOOKOUT_API_KEY=sk-...
+lookout run tests.yaml --provider openai --model gpt-4o
+```
+
+Or in the spec:
+
+```yaml
+model:
+  provider: openai
+  name: gpt-4o
+  api_key: ""
+```
+
+### Notes
+
+- **Never commit the key.** Use `LOOKOUT_API_KEY` and keep it out of version
+  control. The built-in `.gitignore` catches `.env`.
+- **Preflight skips the /api/tags check for cloud providers** — it just
+  confirms the key is non-empty. First real test call will surface auth errors.
+- **Screenshots are sent to the provider** — full-page PNGs of your app. If
+  the app shows PII or other sensitive content, either keep the model local,
+  use section filters, or read the provider's data-retention policy.
+- **Per-test cost**: a single Claude Sonnet 4.5 judgement on a 1440×900
+  screenshot is typically under 2¢. 30 tests costs less than a coffee.
 
 ## Apps behind MFA / SSO
 
