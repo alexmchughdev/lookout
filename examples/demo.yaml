@@ -39,8 +39,8 @@ tests:
     section: pim
     url: /web/index.php/pim/viewEmployeeList
     question: Is an employee list or table visible with search filters?
-    wait_for: '.oxd-table'
-    wait_ms: 1500
+    wait_for: '.oxd-table-body'
+    wait_ms: 4000
 
   - id: L-02
     section: leave

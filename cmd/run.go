@@ -82,6 +82,19 @@ func init() {
 	runCmd.Flags().BoolVar(&flagNoGPU, "no-gpu-monitor", false, "Don't pop a GPU-stats terminal during the run")
 }
 
+// formatDuration renders a time.Duration in human-friendly precision:
+// sub-second → "450ms", under 10s → "1.3s", longer → "12s".
+func formatDuration(d time.Duration) string {
+	switch {
+	case d < time.Second:
+		return fmt.Sprintf("%dms", d.Milliseconds())
+	case d < 10*time.Second:
+		return fmt.Sprintf("%.1fs", d.Seconds())
+	default:
+		return fmt.Sprintf("%ds", int(d.Seconds()))
+	}
+}
+
 // isInteractiveDisplay reports whether we're on a graphical desktop with a
 // real TTY attached — used to gate auto-opening a browser / GPU monitor.
 func isInteractiveDisplay() bool {
@@ -301,11 +314,11 @@ func runSuite(args []string) error {
 		OnResult: func(r *runner.Result) {
 			sym := symbols[r.Verdict.Result]
 			note := r.Verdict.Note
-			if len(note) > 65 {
-				note = note[:65]
+			if len(note) > 120 {
+				note = note[:117] + "..."
 			}
 			prefix := fmt.Sprintf("  %s [%s] ", sym, r.TestID)
-			suffix := fmt.Sprintf(" (%ds)", int(r.Duration.Seconds()))
+			suffix := fmt.Sprintf(" (%s)", formatDuration(r.Duration))
 			msg := note + suffix
 
 			switch r.Verdict.Result {
