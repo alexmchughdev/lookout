@@ -26,10 +26,10 @@ type Result struct {
 
 // Options configures a test run.
 type Options struct {
-	Sections []string         // nil = all sections
-	Headless bool             // true = headless Chrome
-	Retries  int              // retry Fail/Blocked verdicts up to N extra times
-	OnResult func(r *Result)  // called after each test completes
+	Sections []string        // nil = all sections
+	Headless bool            // true = headless Chrome
+	Retries  int             // retry Fail/Blocked verdicts up to N extra times
+	OnResult func(r *Result) // called after each test completes
 }
 
 // Run executes all tests in the spec and returns results.

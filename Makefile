@@ -1,6 +1,6 @@
 BINARY  := lookout
 VERSION := 0.1.0
-LDFLAGS := -ldflags "-X github.com/AlexMcHugh1/lookout/cmd.version=$(VERSION) -s -w"
+LDFLAGS := -ldflags "-X github.com/alexmchughdev/lookout/cmd.version=$(VERSION) -s -w"
 
 .PHONY: build run tidy clean install cross
 

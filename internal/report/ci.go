@@ -18,11 +18,11 @@ import (
 // `Blocked` verdicts are reported as errors; `Skipped` as skipped; `Fail` as failures.
 func WriteJUnit(results []*runner.Result, spec *config.Spec, duration time.Duration, path string) error {
 	type testcase struct {
-		XMLName  xml.Name `xml:"testcase"`
-		Name     string   `xml:"name,attr"`
-		Classname string  `xml:"classname,attr"`
-		Time     string   `xml:"time,attr"`
-		Failure  *struct {
+		XMLName   xml.Name `xml:"testcase"`
+		Name      string   `xml:"name,attr"`
+		Classname string   `xml:"classname,attr"`
+		Time      string   `xml:"time,attr"`
+		Failure   *struct {
 			XMLName xml.Name `xml:"failure"`
 			Message string   `xml:"message,attr"`
 			Body    string   `xml:",chardata"`
@@ -105,12 +105,12 @@ func WriteJUnit(results []*runner.Result, spec *config.Spec, duration time.Durat
 // WriteJSON writes a machine-readable JSON report.
 func WriteJSON(results []*runner.Result, spec *config.Spec, duration time.Duration, build, path string) error {
 	type jsonResult struct {
-		ID       string `json:"id"`
-		Section  string `json:"section"`
-		Result   string `json:"result"`
-		Note     string `json:"note"`
-		Duration string `json:"duration"`
-		Attempts int    `json:"attempts"`
+		ID        string `json:"id"`
+		Section   string `json:"section"`
+		Result    string `json:"result"`
+		Note      string `json:"note"`
+		Duration  string `json:"duration"`
+		Attempts  int    `json:"attempts"`
 		PreActErr string `json:"pre_action_error,omitempty"`
 	}
 	type summary struct {
@@ -118,13 +118,13 @@ func WriteJSON(results []*runner.Result, spec *config.Spec, duration time.Durati
 	}
 
 	out := struct {
-		Build    string        `json:"build"`
-		URL      string        `json:"url"`
-		Provider string        `json:"provider"`
-		Model    string        `json:"model"`
-		Duration string        `json:"duration"`
-		Summary  summary       `json:"summary"`
-		Results  []jsonResult  `json:"results"`
+		Build    string       `json:"build"`
+		URL      string       `json:"url"`
+		Provider string       `json:"provider"`
+		Model    string       `json:"model"`
+		Duration string       `json:"duration"`
+		Summary  summary      `json:"summary"`
+		Results  []jsonResult `json:"results"`
 	}{
 		Build:    build,
 		URL:      spec.App.URL,

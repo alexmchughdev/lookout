@@ -20,24 +20,24 @@ import (
 )
 
 var (
-	flagURL      string
-	flagEmail    string
-	flagPassword string
-	flagBuild    string
-	flagSections string
-	flagModel    string
-	flagProvider string
-	flagAPIKey   string
-	flagOutput   string
-	flagJUnit    string
-	flagJSON     string
+	flagURL           string
+	flagEmail         string
+	flagPassword      string
+	flagBuild         string
+	flagSections      string
+	flagModel         string
+	flagProvider      string
+	flagAPIKey        string
+	flagOutput        string
+	flagJUnit         string
+	flagJSON          string
 	flagRetries       int
 	flagNoScreenshots bool
 	flagHeaded        bool
-	flagNoReport bool
-	flagNoPreflight bool
-	flagNoOpen   bool
-	flagNoGPU    bool
+	flagNoReport      bool
+	flagNoPreflight   bool
+	flagNoOpen        bool
+	flagNoGPU         bool
 )
 
 var runCmd = &cobra.Command{

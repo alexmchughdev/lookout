@@ -28,9 +28,9 @@ func Write(
 		return "", fmt.Errorf("creating output dir: %w", err)
 	}
 
-	ts    := time.Now().Format("2006-01-02_1504")
+	ts := time.Now().Format("2006-01-02_1504")
 	fname := fmt.Sprintf("lookout-report_%s_build-%s.html", ts, build)
-	path  := filepath.Join(outputDir, fname)
+	path := filepath.Join(outputDir, fname)
 
 	html := renderHTML(results, spec, duration, build, includeScreenshots)
 
@@ -45,14 +45,18 @@ func renderHTML(results []*runner.Result, spec *config.Spec, duration time.Durat
 	passC, failC, blockC, skipC := 0, 0, 0, 0
 	for _, r := range results {
 		switch r.Verdict.Result {
-		case "Pass":    passC++
-		case "Fail":    failC++
-		case "Blocked": blockC++
-		case "Skipped": skipC++
+		case "Pass":
+			passC++
+		case "Fail":
+			failC++
+		case "Blocked":
+			blockC++
+		case "Skipped":
+			skipC++
 		}
 	}
 
-	overall   := "PASS"
+	overall := "PASS"
 	overallColor := "#22c55e"
 	if failC > 0 {
 		overall = "FAIL"

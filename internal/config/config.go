@@ -38,11 +38,11 @@ func (m *ModelConfig) SetDefaults() {
 
 // AuthConfig holds login flow settings.
 type AuthConfig struct {
-	Type               string `yaml:"type"`                 // email_password | session
-	LoginPath          string `yaml:"login_path"`           // path to login page, default "/login"
-	SessionFile        string `yaml:"session_file"`         // path to saved session (type=session)
+	Type               string `yaml:"type"`         // email_password | session
+	LoginPath          string `yaml:"login_path"`   // path to login page, default "/login"
+	SessionFile        string `yaml:"session_file"` // path to saved session (type=session)
 	EmailField         string `yaml:"email_field"`
-	ContinueButton     string `yaml:"continue_button"`      // optional two-step
+	ContinueButton     string `yaml:"continue_button"` // optional two-step
 	PasswordField      string `yaml:"password_field"`
 	SubmitButton       string `yaml:"submit_button"`
 	SuccessURLExcludes string `yaml:"success_url_excludes"` // e.g. "/login"
