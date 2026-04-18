@@ -20,7 +20,7 @@ type Result struct {
 	Verdict    vision.Verdict
 	Duration   time.Duration
 	Attempts   int    // how many attempts were made (>=1)
-	Screenshot []byte // nil unless debug mode or failure
+	Screenshot []byte // always populated; the report decides whether to embed
 	PreActErr  string // non-empty if pre-action failed (test still runs)
 }
 
@@ -28,7 +28,6 @@ type Result struct {
 type Options struct {
 	Sections []string         // nil = all sections
 	Headless bool             // true = headless Chrome
-	Debug    bool             // true = embed all screenshots
 	Retries  int              // retry Fail/Blocked verdicts up to N extra times
 	OnResult func(r *Result)  // called after each test completes
 }
@@ -97,7 +96,7 @@ func Run(spec *config.Spec, opts Options) ([]*Result, error) {
 		var r *Result
 		attempts := opts.Retries + 1
 		for attempt := 1; attempt <= attempts; attempt++ {
-			r = runOne(session, &tests[i], spec, opts.Debug)
+			r = runOne(session, &tests[i], spec)
 			r.Attempts = attempt
 			if r.Verdict.Result == "Pass" || r.Verdict.Result == "Skipped" {
 				break
@@ -115,7 +114,7 @@ func Run(spec *config.Spec, opts Options) ([]*Result, error) {
 	return results, nil
 }
 
-func runOne(s *browser.Session, test *config.TestDef, spec *config.Spec, debug bool) *Result {
+func runOne(s *browser.Session, test *config.TestDef, spec *config.Spec) *Result {
 	r := &Result{
 		TestID:  test.ID,
 		Section: test.Section,
@@ -180,10 +179,10 @@ func runOne(s *browser.Session, test *config.TestDef, spec *config.Spec, debug b
 
 	r.Duration = time.Since(start)
 
-	// Store screenshot if debug or failure
-	if debug || r.Verdict.Result == "Fail" {
-		r.Screenshot = screenshot
-	}
+	// Always retain the screenshot — the report decides whether to embed it.
+	// Memory cost is tiny (~200-500 KB per test) and having it available means
+	// users never wonder "what did the model actually see?".
+	r.Screenshot = screenshot
 
 	return r
 }

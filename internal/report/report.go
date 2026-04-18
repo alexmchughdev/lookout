@@ -14,13 +14,15 @@ import (
 )
 
 // Write generates an HTML report and returns the file path.
+// When includeScreenshots is true (the default), every test embeds its
+// screenshot inline; false produces a minimal report with verdicts only.
 func Write(
 	results []*runner.Result,
 	spec *config.Spec,
 	duration time.Duration,
 	outputDir string,
 	build string,
-	debug bool,
+	includeScreenshots bool,
 ) (string, error) {
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return "", fmt.Errorf("creating output dir: %w", err)
@@ -30,7 +32,7 @@ func Write(
 	fname := fmt.Sprintf("lookout-report_%s_build-%s.html", ts, build)
 	path  := filepath.Join(outputDir, fname)
 
-	html := renderHTML(results, spec, duration, build, debug)
+	html := renderHTML(results, spec, duration, build, includeScreenshots)
 
 	if err := os.WriteFile(path, []byte(html), 0644); err != nil {
 		return "", fmt.Errorf("writing report: %w", err)
@@ -39,7 +41,7 @@ func Write(
 	return path, nil
 }
 
-func renderHTML(results []*runner.Result, spec *config.Spec, duration time.Duration, build string, debug bool) string {
+func renderHTML(results []*runner.Result, spec *config.Spec, duration time.Duration, build string, includeScreenshots bool) string {
 	passC, failC, blockC, skipC := 0, 0, 0, 0
 	for _, r := range results {
 		switch r.Verdict.Result {
@@ -98,14 +100,12 @@ func renderHTML(results []*runner.Result, spec *config.Spec, duration time.Durat
 		))
 		for _, item := range sections[sec] {
 			imgTag := ""
-			if debug || item.Verdict == "Fail" {
-				if len(item.SS) > 0 {
-					b64 := base64.StdEncoding.EncodeToString(item.SS)
-					imgTag = fmt.Sprintf(
-						`<img src="data:image/png;base64,%s" style="width:100%%;border:1px solid #e5e7eb;border-radius:6px;margin-top:10px">`,
-						b64,
-					)
-				}
+			if includeScreenshots && len(item.SS) > 0 {
+				b64 := base64.StdEncoding.EncodeToString(item.SS)
+				imgTag = fmt.Sprintf(
+					`<img src="data:image/png;base64,%s" style="width:100%%;border:1px solid #e5e7eb;border-radius:6px;margin-top:10px">`,
+					b64,
+				)
 			}
 			sectionHTML.WriteString(fmt.Sprintf(`
 <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:12px;background:#fff">
@@ -118,9 +118,9 @@ func renderHTML(results []*runner.Result, spec *config.Spec, duration time.Durat
 		}
 	}
 
-	screenshotNote := "Failure screenshots only. Run with --debug for all."
-	if debug {
-		screenshotNote = "All screenshots embedded."
+	screenshotNote := "Screenshot captured for every test."
+	if !includeScreenshots {
+		screenshotNote = "Screenshots omitted (--no-screenshots). Run without the flag to see what the vision model saw."
 	}
 
 	return fmt.Sprintf(`<!DOCTYPE html>
