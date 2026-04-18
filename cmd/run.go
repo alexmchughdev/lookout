@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -123,14 +124,21 @@ func shouldOpenReport() bool {
 // and broken mailcap entries (pointing at terminal editors like micro) are
 // common on desktop distros. We try real browser binaries directly instead.
 func openInBrowser(path string) error {
-	if runtime.GOOS == "darwin" {
-		return exec.Command("open", path).Start()
-	}
-	if runtime.GOOS == "windows" {
-		return exec.Command("cmd", "/c", "start", "", path).Start()
+	// Resolve to an absolute path — a bare `file://reports/foo.html` gets
+	// parsed with 'reports' as the hostname and fails.
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		abs = path
 	}
 
-	fileURL := "file://" + path
+	if runtime.GOOS == "darwin" {
+		return exec.Command("open", abs).Start()
+	}
+	if runtime.GOOS == "windows" {
+		return exec.Command("cmd", "/c", "start", "", abs).Start()
+	}
+
+	fileURL := "file://" + abs
 
 	// Respect $BROWSER (can be a colon-separated list) first.
 	for _, b := range strings.Split(os.Getenv("BROWSER"), ":") {
