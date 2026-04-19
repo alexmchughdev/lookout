@@ -77,9 +77,12 @@ func runTypeAndVerify(s *browser.Session, baseURL string, pa *config.PreAction) 
 	if err := s.Eval(`document.activeElement.blur()`); err == nil {
 		s.Click(editorSel) // refocus
 	}
-	if err := s.SendKeys(editorSel, "\x0FEnd\n"+pa.Text); err != nil { // Ctrl+End then type
-		// Fallback: just send the text
-		s.SendKeys(editorSel, pa.Text)
+	// chromedp's SendKeys translates printable runes into keystrokes; escape
+	// sequences like Ctrl+End don't work as a prefix string, so just send
+	// the literal text. The preceding click() places the caret at the end
+	// of existing content for most rich-text editors.
+	if err := s.SendKeys(editorSel, pa.Text); err != nil {
+		return fmt.Errorf("typing into editor: %w", err)
 	}
 
 	// Programmatic blur to trigger autosave
