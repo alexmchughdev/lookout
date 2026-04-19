@@ -3,6 +3,7 @@ package browser
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -219,37 +220,30 @@ func clickSingle(ctx context.Context, sel string) error {
 }
 
 // clickByText finds the innermost element whose visible text contains the
-// given string and clicks it. Matches Playwright's text= locator semantics
-// closely enough for QA-spec conversion.
+// given string and dispatches a real mouse click at its center.
+// Matches Playwright's text= locator semantics closely enough for QA-spec
+// conversion.
 func clickByText(ctx context.Context, text string) error {
 	text = strings.Trim(text, `"`)
 	js := fmt.Sprintf(`
 (function() {
   var needle = %q;
-  var it = document.evaluate(
-    "//*[not(self::script)][not(self::style)][contains(normalize-space(.), "+JSON.stringify(needle)+")][not(.//*[contains(normalize-space(.), "+JSON.stringify(needle)+")])]",
-    document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null
-  );
+  var xp = "//*[not(self::script)][not(self::style)][contains(normalize-space(.), " + JSON.stringify(needle) + ")][not(.//*[contains(normalize-space(.), " + JSON.stringify(needle) + ")])]";
+  var it = document.evaluate(xp, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
   var el = it.singleNodeValue;
-  if (!el) return false;
+  if (!el) return "";
   var r = el.getBoundingClientRect();
-  if (r.width === 0 || r.height === 0) return false;
-  el.scrollIntoView({block: "center"});
-  el.click();
-  return true;
+  if (r.width === 0 || r.height === 0) return "";
+  el.scrollIntoView({block: "center", behavior: "instant"});
+  r = el.getBoundingClientRect();
+  return JSON.stringify({x: r.left + r.width/2, y: r.top + r.height/2});
 })()`, text)
-	var ok bool
-	if err := chromedp.Run(ctx, chromedp.Evaluate(js, &ok)); err != nil {
-		return err
-	}
-	if !ok {
-		return fmt.Errorf("text= locator did not match: %s", text)
-	}
-	return nil
+	return clickAtEvaluatedPoint(ctx, js, fmt.Sprintf("text= did not match: %s", text))
 }
 
 // clickHasText handles selectors of the form "tag[attrs]:has-text(\"...\")".
-// Queries the CSS part, filters by textContent, clicks the first match.
+// Queries the CSS part, filters by textContent, dispatches a real mouse click
+// at the first match's center.
 func clickHasText(ctx context.Context, sel string) error {
 	i := strings.Index(sel, ":has-text(")
 	if i < 0 {
@@ -272,21 +266,45 @@ func clickHasText(ctx context.Context, sel string) error {
     if (nodes[i].textContent && nodes[i].textContent.indexOf(%q) !== -1) {
       var r = nodes[i].getBoundingClientRect();
       if (r.width === 0 || r.height === 0) continue;
-      nodes[i].scrollIntoView({block: "center"});
-      nodes[i].click();
-      return true;
+      nodes[i].scrollIntoView({block: "center", behavior: "instant"});
+      r = nodes[i].getBoundingClientRect();
+      return JSON.stringify({x: r.left + r.width/2, y: r.top + r.height/2});
     }
   }
-  return false;
+  return "";
 })()`, css, text)
-	var ok bool
-	if err := chromedp.Run(ctx, chromedp.Evaluate(js, &ok)); err != nil {
-		return err
+	return clickAtEvaluatedPoint(ctx, js, fmt.Sprintf(":has-text() did not match: %s", sel))
+}
+
+// clickAtEvaluatedPoint runs the JS, expects it to return a JSON {"x":n,"y":n}
+// locating the element's click target, then dispatches a real chromedp mouse
+// click at those coordinates so React / framework event handlers fire the
+// same as they would for a human click.
+func clickAtEvaluatedPoint(ctx context.Context, js, missErr string) error {
+	// Give the element a moment to render if it just appeared. Poll up to 5s
+	// because React-heavy SPAs sometimes mount controls asynchronously after
+	// the initial DOMContentLoaded.
+	var coords string
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		if err := chromedp.Run(ctx, chromedp.Evaluate(js, &coords)); err != nil {
+			return err
+		}
+		if coords != "" {
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
 	}
-	if !ok {
-		return fmt.Errorf(":has-text() locator did not match: %s", sel)
+	if coords == "" {
+		return fmt.Errorf("%s", missErr)
 	}
-	return nil
+	var pt struct {
+		X, Y float64
+	}
+	if err := json.Unmarshal([]byte(coords), &pt); err != nil {
+		return fmt.Errorf("parsing click coords: %w", err)
+	}
+	return chromedp.Run(ctx, chromedp.MouseClickXY(pt.X, pt.Y))
 }
 
 // splitSelectorList splits a comma-separated selector list, respecting paren
