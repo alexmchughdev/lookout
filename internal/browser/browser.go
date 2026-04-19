@@ -161,14 +161,169 @@ func (s *Session) Fill(selector, value string) error {
 }
 
 // Click clicks the first element matching the selector.
+// Supports three selector flavours so specs converted from Playwright / Cypress
+// don't all need rewriting:
+//
+//   - plain CSS:        "button.primary"
+//   - Playwright text:  "text=Sign in"            → first visible element whose
+//                                                    text contains "Sign in"
+//   - Playwright has-text: 'button:has-text("Save")' → first <button> whose
+//                                                    text contains "Save"
+//   - comma-separated list: any of the above; first match wins. Lists are
+//     split on commas that sit outside parens/quotes so the inside of
+//     :has-text("a, b") stays intact.
 func (s *Session) Click(selector string) error {
 	ctx, cancel := context.WithTimeout(s.Ctx, 10*time.Second)
 	defer cancel()
 
+	// Fast path: pure CSS, no Playwright extensions. Use chromedp directly so
+	// behaviour on existing specs is unchanged.
+	if !needsTextMatching(selector) {
+		return chromedp.Run(ctx,
+			chromedp.WaitVisible(selector, chromedp.ByQuery),
+			chromedp.Click(selector, chromedp.ByQuery),
+		)
+	}
+
+	// Slow path: try each comma-split clause until one clicks.
+	for _, clause := range splitSelectorList(selector) {
+		if err := clickSingle(ctx, clause); err == nil {
+			return nil
+		}
+	}
+	return fmt.Errorf("no selector matched: %s", selector)
+}
+
+// needsTextMatching reports whether the selector uses any Playwright-flavoured
+// text extension that plain chromedp/CSS can't handle.
+func needsTextMatching(sel string) bool {
+	return strings.Contains(sel, ":has-text(") || strings.HasPrefix(strings.TrimSpace(sel), "text=")
+}
+
+// clickSingle clicks one selector clause (no commas at the top level).
+func clickSingle(ctx context.Context, sel string) error {
+	sel = strings.TrimSpace(sel)
+	if sel == "" {
+		return fmt.Errorf("empty selector")
+	}
+	if strings.HasPrefix(sel, "text=") {
+		return clickByText(ctx, strings.TrimPrefix(sel, "text="))
+	}
+	if strings.Contains(sel, ":has-text(") {
+		return clickHasText(ctx, sel)
+	}
 	return chromedp.Run(ctx,
-		chromedp.WaitVisible(selector, chromedp.ByQuery),
-		chromedp.Click(selector, chromedp.ByQuery),
+		chromedp.WaitVisible(sel, chromedp.ByQuery),
+		chromedp.Click(sel, chromedp.ByQuery),
 	)
+}
+
+// clickByText finds the innermost element whose visible text contains the
+// given string and clicks it. Matches Playwright's text= locator semantics
+// closely enough for QA-spec conversion.
+func clickByText(ctx context.Context, text string) error {
+	text = strings.Trim(text, `"`)
+	js := fmt.Sprintf(`
+(function() {
+  var needle = %q;
+  var it = document.evaluate(
+    "//*[not(self::script)][not(self::style)][contains(normalize-space(.), "+JSON.stringify(needle)+")][not(.//*[contains(normalize-space(.), "+JSON.stringify(needle)+")])]",
+    document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null
+  );
+  var el = it.singleNodeValue;
+  if (!el) return false;
+  var r = el.getBoundingClientRect();
+  if (r.width === 0 || r.height === 0) return false;
+  el.scrollIntoView({block: "center"});
+  el.click();
+  return true;
+})()`, text)
+	var ok bool
+	if err := chromedp.Run(ctx, chromedp.Evaluate(js, &ok)); err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("text= locator did not match: %s", text)
+	}
+	return nil
+}
+
+// clickHasText handles selectors of the form "tag[attrs]:has-text(\"...\")".
+// Queries the CSS part, filters by textContent, clicks the first match.
+func clickHasText(ctx context.Context, sel string) error {
+	i := strings.Index(sel, ":has-text(")
+	if i < 0 {
+		return fmt.Errorf("not a :has-text() selector: %s", sel)
+	}
+	css := strings.TrimSpace(sel[:i])
+	rest := sel[i+len(":has-text("):]
+	end := strings.LastIndex(rest, ")")
+	if end < 0 {
+		return fmt.Errorf("unterminated :has-text() in %s", sel)
+	}
+	text := strings.Trim(strings.TrimSpace(rest[:end]), `"'`)
+	if css == "" {
+		css = "*"
+	}
+	js := fmt.Sprintf(`
+(function() {
+  var nodes = document.querySelectorAll(%q);
+  for (var i = 0; i < nodes.length; i++) {
+    if (nodes[i].textContent && nodes[i].textContent.indexOf(%q) !== -1) {
+      var r = nodes[i].getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      nodes[i].scrollIntoView({block: "center"});
+      nodes[i].click();
+      return true;
+    }
+  }
+  return false;
+})()`, css, text)
+	var ok bool
+	if err := chromedp.Run(ctx, chromedp.Evaluate(js, &ok)); err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf(":has-text() locator did not match: %s", sel)
+	}
+	return nil
+}
+
+// splitSelectorList splits a comma-separated selector list, respecting paren
+// and quote nesting so :has-text("a, b") stays a single clause.
+func splitSelectorList(s string) []string {
+	var out []string
+	var cur strings.Builder
+	depth := 0
+	var quote byte
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch {
+		case quote != 0:
+			if c == quote {
+				quote = 0
+			}
+			cur.WriteByte(c)
+		case c == '"' || c == '\'':
+			quote = c
+			cur.WriteByte(c)
+		case c == '(' || c == '[':
+			depth++
+			cur.WriteByte(c)
+		case c == ')' || c == ']':
+			depth--
+			cur.WriteByte(c)
+		case c == ',' && depth == 0:
+			out = append(out, cur.String())
+			cur.Reset()
+		default:
+			cur.WriteByte(c)
+		}
+	}
+	if cur.Len() > 0 {
+		out = append(out, cur.String())
+	}
+	return out
 }
 
 // ClickIfExists clicks the selector if it exists, ignoring errors.
