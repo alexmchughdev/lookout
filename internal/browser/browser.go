@@ -22,11 +22,22 @@ type Session struct {
 	profileDir string
 }
 
-// New launches a headless Chrome session.
-func New(headless bool) (*Session, error) {
-	profileDir, err := os.MkdirTemp("", "lookout_chrome_")
-	if err != nil {
-		return nil, fmt.Errorf("creating temp profile dir: %w", err)
+// New launches a Chrome session. If profileDir is empty a temp dir is created
+// and cleaned up on Cancel. Pass a stable path to persist the profile — the
+// dir survives the run, IndexedDB / localStorage / Service Workers stick
+// around, and the next session reuses them. This is what session-auth needs
+// for local-first apps where "log in once" isn't enough because the vault
+// lives in IndexedDB.
+func New(headless bool, profileDir string) (*Session, error) {
+	persistent := profileDir != ""
+	if !persistent {
+		d, err := os.MkdirTemp("", "lookout_chrome_")
+		if err != nil {
+			return nil, fmt.Errorf("creating temp profile dir: %w", err)
+		}
+		profileDir = d
+	} else if err := os.MkdirAll(profileDir, 0700); err != nil {
+		return nil, fmt.Errorf("creating profile dir %s: %w", profileDir, err)
 	}
 
 	// Build options from scratch — chromedp.DefaultExecAllocatorOptions
@@ -57,11 +68,15 @@ func New(headless bool) (*Session, error) {
 	quiet := log.New(io.Discard, "", 0)
 	ctx, cancel := chromedp.NewContext(allocCtx, chromedp.WithErrorf(quiet.Printf))
 
-	// Combined cancel: cancels both contexts
+	// Combined cancel: cancels both contexts. Only clean up the profile dir
+	// if we created it; leave a user-supplied one alone so IndexedDB etc.
+	// persist for the next run.
 	combinedCancel := func() {
 		cancel()
 		allocCancel()
-		os.RemoveAll(profileDir)
+		if !persistent {
+			os.RemoveAll(profileDir)
+		}
 	}
 
 	// Warm up the browser

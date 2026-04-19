@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -66,7 +67,11 @@ this command whenever the session expires.`,
 		faint.Printf("  Target:  %s\n", s.App.URL)
 		faint.Printf("  Session: %s\n\n", sessionFile)
 
-		session, err := browser.New(false) // headed
+		// Use a persistent profile dir alongside the session file so
+		// IndexedDB / Service Worker state captured during manual login
+		// survives for the subsequent `lookout run`.
+		profileDir := filepath.Join(filepath.Dir(sessionFile), "profile")
+		session, err := browser.New(false, profileDir) // headed
 		if err != nil {
 			return fmt.Errorf("launching browser: %w", err)
 		}

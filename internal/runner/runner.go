@@ -3,6 +3,7 @@ package runner
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -54,8 +55,15 @@ func Run(spec *config.Spec, opts Options) ([]*Result, error) {
 		return nil, fmt.Errorf("no tests to run (check --sections filter)")
 	}
 
-	// Launch browser
-	session, err := browser.New(opts.Headless)
+	// Launch browser. For session-auth, reuse the profile dir beside the
+	// session file so IndexedDB / localStorage / Service Worker state
+	// persist across runs — essential for local-first apps that store
+	// data in the browser.
+	profileDir := ""
+	if spec.App.Auth.Type == "session" && spec.App.Auth.SessionFile != "" {
+		profileDir = filepath.Join(filepath.Dir(spec.App.Auth.SessionFile), "profile")
+	}
+	session, err := browser.New(opts.Headless, profileDir)
 	if err != nil {
 		return nil, fmt.Errorf("launching browser: %w\nTip: run 'lookout install-browsers'", err)
 	}
