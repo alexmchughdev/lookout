@@ -104,6 +104,7 @@ type PreAction struct {
 	Text           string `yaml:"text"`
 	HoldMs         int    `yaml:"hold_ms"`
 	ReloadAfter    bool   `yaml:"reload_after"`
+	SkipReload     bool   `yaml:"skip_reload"` // type_and_verify: skip the reload+reopen; screenshot directly after typing
 	WaitMs         int    `yaml:"wait_ms"`
 	Ms             int    `yaml:"ms"`
 }

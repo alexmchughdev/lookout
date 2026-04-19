@@ -91,6 +91,14 @@ func runTypeAndVerify(s *browser.Session, baseURL string, pa *config.PreAction) 
 	}
 	s.Sleep(time.Duration(waitMs) * time.Millisecond)
 
+	// Skip reload+reopen if the spec asks us to — some apps close the editor
+	// on reload and refuse to re-open the same note by URL (no stable route
+	// per note, or route redirects to the list). Screenshot happens while
+	// the editor is still open.
+	if pa.SkipReload {
+		return nil
+	}
+
 	// Capture URL before reload
 	noteURL, _ := s.CurrentURL()
 
